@@ -71,16 +71,17 @@ func NewCMServer() *CMServer {
 			Controllers:                                     []string{"*"},
 			Port:                                            ports.ControllerManagerPort,
 			Address:                                         "0.0.0.0",
-			ConcurrentEndpointSyncs:                         5,
-			ConcurrentServiceSyncs:                          1,
-			ConcurrentRCSyncs:                               5,
-			ConcurrentRSSyncs:                               5,
-			ConcurrentDaemonSetSyncs:                        2,
-			ConcurrentJobSyncs:                              5,
-			ConcurrentResourceQuotaSyncs:                    5,
-			ConcurrentDeploymentSyncs:                       5,
-			ConcurrentNamespaceSyncs:                        10,
-			ConcurrentSATokenSyncs:                          5,
+			ConcurrentEndpointSyncs:                         5, //线程数
+			ConcurrentServiceSyncs:                          1, //线程数
+			ConcurrentRCSyncs:                               5, //线程数
+			ConcurrentRSSyncs:                               5, //线程数
+			ConcurrentDaemonSetSyncs:                        2, //线程数
+			ConcurrentJobSyncs:                              5, //线程数
+			ConcurrentResourceQuotaSyncs:                    5, //线程数
+			ConcurrentDeploymentSyncs:                       5, //线程数
+			ConcurrentNamespaceSyncs:                        10, //线程数
+			ConcurrentSATokenSyncs:                          5, //线程数
+			// 超时时间和同步周期等时间设置
 			ServiceSyncPeriod:                               metav1.Duration{Duration: 5 * time.Minute},
 			RouteReconciliationPeriod:                       metav1.Duration{Duration: 10 * time.Second},
 			ResourceQuotaSyncPeriod:                         metav1.Duration{Duration: 5 * time.Minute},
@@ -119,10 +120,13 @@ func NewCMServer() *CMServer {
 			LeaderElection:                        leaderelectionconfig.DefaultLeaderElectionConfiguration(),
 			ControllerStartInterval:               metav1.Duration{Duration: 0 * time.Second},
 			EnableGarbageCollector:                true,
-			ConcurrentGCSyncs:                     20,
+			ConcurrentGCSyncs:                     20, //垃圾回收线程数
 			GCIgnoredResources:                    gcIgnoredResources,
+
+			// 证书路径
 			ClusterSigningCertFile:                DefaultClusterSigningCertFile,
 			ClusterSigningKeyFile:                 DefaultClusterSigningKeyFile,
+
 			ClusterSigningDuration:                metav1.Duration{Duration: helpers.OneYear},
 			ReconcilerSyncLoopPeriod:              metav1.Duration{Duration: 60 * time.Second},
 			EnableTaintManager:                    true,

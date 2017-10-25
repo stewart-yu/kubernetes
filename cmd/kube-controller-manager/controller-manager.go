@@ -37,16 +37,20 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// controller-manager入口
 func main() {
+	// 初始化控制器服务器对象
 	s := options.NewCMServer()
 	s.AddFlags(pflag.CommandLine, app.KnownControllers(), app.ControllersDisabledByDefault.List())
 
+	// 对参数进行解析
 	flag.InitFlags()
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
 	verflag.PrintAndExitIfRequested()
 
+	// 启动NewCMServer
 	if err := app.Run(s); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)

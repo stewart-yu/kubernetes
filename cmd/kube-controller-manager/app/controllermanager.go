@@ -116,15 +116,18 @@ func Run(s *options.CMServer) error {
 		glog.Errorf("unable to register configz: %s", err)
 	}
 
+	// 新建两个客户端Server：kubeClient用来连接API
 	kubeClient, leaderElectionClient, kubeconfig, err := createClients(s)
 	if err != nil {
 		return err
 	}
 
+	//启动server，包含系统监控的api，如/metrics可以记录api调用次数
 	go startHTTP(s)
 
 	recorder := createRecorder(kubeClient)
 
+	// 定义启动controllers的启动方法
 	run := func(stop <-chan struct{}) {
 		rootClientBuilder := controller.SimpleControllerClientBuilder{
 			ClientConfig: kubeconfig,
@@ -151,6 +154,7 @@ func Run(s *options.CMServer) error {
 		}
 		saTokenControllerInitFunc := serviceAccountTokenControllerStarter{rootClientBuilder: rootClientBuilder}.startServiceAccountTokenController
 
+		// 启动各个控制器：控制机列表NewControllerInitializers()
 		if err := StartControllers(ctx, saTokenControllerInitFunc, NewControllerInitializers()); err != nil {
 			glog.Fatalf("error starting controllers: %v", err)
 		}
@@ -161,6 +165,7 @@ func Run(s *options.CMServer) error {
 		select {}
 	}
 
+	// k8s的HA方案中CM是一主多备，如果自己不是leader则不启动CM
 	if !s.LeaderElection.LeaderElect {
 		run(nil)
 		panic("unreachable")
@@ -183,13 +188,15 @@ func Run(s *options.CMServer) error {
 		glog.Fatalf("error creating lock: %v", err)
 	}
 
+	// 选主机制，利用etcd选主过程，启动的时候都会抢先注册自己为leader，
+	// 当然只有一个会成功，其它的节点watch，如果leader挂了后其它节点会成为leader启动自己CM
 	leaderelection.RunOrDie(leaderelection.LeaderElectionConfig{
 		Lock:          rl,
 		LeaseDuration: s.LeaderElection.LeaseDuration.Duration,
 		RenewDeadline: s.LeaderElection.RenewDeadline.Duration,
 		RetryPeriod:   s.LeaderElection.RetryPeriod.Duration,
 		Callbacks: leaderelection.LeaderCallbacks{
-			OnStartedLeading: run,
+			OnStartedLeading: run,// 如果自己是leader启动controllers
 			OnStoppedLeading: func() {
 				glog.Fatalf("leaderelection lost")
 			},
@@ -472,6 +479,7 @@ func StartControllers(ctx ControllerContext, startSATokenController InitFunc, co
 		ctx.Cloud.Initialize(ctx.ClientBuilder)
 	}
 
+	// 循环启动不同的控制器
 	for controllerName, initFn := range controllers {
 		if !ctx.IsControllerEnabled(controllerName) {
 			glog.Warningf("%q is disabled", controllerName)
