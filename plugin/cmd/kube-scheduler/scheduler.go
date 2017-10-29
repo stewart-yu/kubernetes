@@ -27,21 +27,28 @@ import (
 	_ "k8s.io/kubernetes/pkg/client/metrics/prometheus" // for client metric registration
 	_ "k8s.io/kubernetes/pkg/version/prometheus"        // for version metric registration
 	"k8s.io/kubernetes/plugin/cmd/kube-scheduler/app"
+	"k8s.io/kubernetes/staging/src/k8s.io/apiserver/pkg/util/flag"
+	"k8s.io/kubernetes/pkg/version/verflag"
+	"github.com/golang/glog"
 )
 
 func main() {
-	command := app.NewSchedulerCommand()
 
-	// TODO: once we switch everything over to Cobra commands, we can go back to calling
-	// utilflag.InitFlags() (by removing its pflag.Parse() call). For now, we have to set the
-	// normalize func and add the go flag set by hand.
-	pflag.CommandLine.SetNormalizeFunc(utilflag.WordSepNormalizeFunc)
-	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
-	// utilflag.InitFlags()
+	// scheduler 启动所需要配置信息的对象
+	s := options.NewSchedulerServer()
+	// 解析命令行的参数，对结构体中的内容进行赋值
+	s.AddFlags(pflag.CommandLine)
+
+	flag.InitFlags()
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	if err := command.Execute(); err != nil {
-		os.Exit(1)
+	verflag.PrintAndExitIfRequested()
+
+	// app.Runs(s) 根据配置信息构建出来各种实例，然后运行 scheduler 的核心逻辑，
+	// 这个函数会一直运行，不会退出。
+	if err := app.Run(s); err != nil {
+		glog.Fatalf("scheduler app failed to run: %v", err)
+
 	}
 }

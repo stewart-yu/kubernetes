@@ -151,6 +151,7 @@ func NewConfigFactory(
 	enableEquivalenceClassCache bool,
 ) scheduler.Configurator {
 	stopEverything := make(chan struct{})
+	// schedulerCache 保存了 pod 和 node 的信息，是调度过程中两者信息的 source of truth
 	schedulerCache := schedulercache.New(30*time.Second, stopEverything)
 
 	// storageClassInformer is only enabled through VolumeScheduling feature gate
@@ -161,6 +162,9 @@ func NewConfigFactory(
 
 	c := &configFactory{
 		client:                         client,
+
+		// ConfigFactory 中非常重要的一部分就是各种 `Lister`，
+		// 用来从获取各种资源列表，它们会和 apiserver 保持实时同步
 		podLister:                      schedulerCache,
 		podQueue:                       core.NewSchedulingQueue(),
 		pVLister:                       pvInformer.Lister(),
@@ -249,6 +253,7 @@ func NewConfigFactory(
 			DeleteFunc: c.deleteNodeFromCache,
 		},
 	)
+	// 获取所有存在的Node
 	c.nodeLister = nodeInformer.Lister()
 
 	pdbInformer.Informer().AddEventHandler(

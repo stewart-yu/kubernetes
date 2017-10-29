@@ -350,24 +350,14 @@ through the API as necessary.`,
 	return cmd
 }
 
-// SchedulerServer represents all the parameters required to start the
-// Kubernetes scheduler server.
-type SchedulerServer struct {
-	SchedulerName                  string
-	Client                         clientset.Interface
-	InformerFactory                informers.SharedInformerFactory
-	PodInformer                    coreinformers.PodInformer
-	AlgorithmSource                componentconfig.SchedulerAlgorithmSource
-	HardPodAffinitySymmetricWeight int32
-	EventClient                    v1core.EventsGetter
-	Recorder                       record.EventRecorder
-	Broadcaster                    record.EventBroadcaster
-	// LeaderElection is optional.
-	LeaderElection *leaderelection.LeaderElectionConfig
-	// HealthzServer is optional.
-	HealthzServer *http.Server
-	// MetricsServer is optional.
-	MetricsServer *http.Server
+
+// 根据传递过来的参数创建 scheduler 需要的配置（主要是需要的各种结构体），
+// 然后调用 scheduler 的接口创建一个新的 scheduler 对象，
+// 最后运行这个对象开启调度代码。
+// Run runs the specified SchedulerServer.  This should never exit.
+func Run(s *options.SchedulerServer) error {
+	// To help debugging, immediately log version
+	glog.Infof("Version: %+v", version.Get())
 }
 
 // NewSchedulerServer creates a runnable SchedulerServer from configuration.
