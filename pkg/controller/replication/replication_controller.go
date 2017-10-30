@@ -48,14 +48,14 @@ const (
 // It is actually just a wrapper around ReplicaSetController.
 type ReplicationManager struct {
 
-	kubeClient clientset.Interface//访问apiserver的客户端
-	podControl controller.PodControlInterface//pod操作函数的封装，在controller_util.go里面定义实现
+	kubeClient clientset.Interface// 访问apiserver的客户端
+	podControl controller.PodControlInterface// pod操作函数的封装，在controller_util.go里面定义实现
 
 	// An rc is temporarily suspended after creating/deleting these many replicas.
 	// It resumes normal action after observing the watch events for them.
-	burstReplicas int
+	burstReplicas int		// 批量操作 pod 允许的并发数
 	// To allow injection of syncReplicationController for testing.
-	syncHandler func(rcKey string) error
+	syncHandler func(rcKey string) error    // 真正执行 replica sync 的函数
 
 	// A TTLCache of pod creates/deletes each rc expects to see.
 	expectations *controller.UIDTrackingControllerExpectations
