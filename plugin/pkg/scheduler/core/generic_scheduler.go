@@ -125,7 +125,10 @@ func (g *genericScheduler) Schedule(pod *v1.Pod, nodeLister algorithm.NodeLister
 	}
 
 	trace.Step("Computing predicates")
+
+	// 根据所有预选算法过滤符合的node列表
 	filteredNodes, failedPredicateMap, err := findNodesThatFit(pod, g.cachedNodeInfoMap, nodes, g.predicates, g.extenders, g.predicateMetaProducer, g.equivalenceCache, g.schedulingQueue)
+
 	if err != nil {
 		return "", err
 	}
@@ -146,12 +149,14 @@ func (g *genericScheduler) Schedule(pod *v1.Pod, nodeLister algorithm.NodeLister
 	}
 
 	metaPrioritiesInterface := g.priorityMetaProducer(pod, g.cachedNodeInfoMap)
+	// 对符合的节点进行优选评分，一个排序的列表
 	priorityList, err := PrioritizeNodes(pod, g.cachedNodeInfoMap, metaPrioritiesInterface, g.prioritizers, filteredNodes, g.extenders)
 	if err != nil {
 		return "", err
 	}
 
 	trace.Step("Selecting host")
+	// selectHos对优选的 node 列表选择一个最优的节点
 	return g.selectHost(priorityList)
 }
 
@@ -174,6 +179,7 @@ func (g *genericScheduler) selectHost(priorityList schedulerapi.HostPriorityList
 		return "", fmt.Errorf("empty priorityList")
 	}
 
+	// 对获得的节点分数进行排名
 	sort.Sort(sort.Reverse(priorityList))
 	maxScore := priorityList[0].Score
 	firstAfterMaxScore := sort.Search(len(priorityList), func(i int) bool { return priorityList[i].Score < maxScore })

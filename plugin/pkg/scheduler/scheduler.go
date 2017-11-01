@@ -426,6 +426,8 @@ func (sched *Scheduler) bind(assumed *v1.Pod, b *v1.Binding) error {
 	return nil
 }
 
+// 每一次选择一个 pod 进行处理，使用 scheduler 函数进行预选（predicate）和优选 (priority)，选择一个合适的 host，
+// 将 pod 和 host 进行绑定关联
 // scheduleOne does the entire scheduling workflow for a single pod.  It is serialized on the scheduling algorithm's host fitting.
 func (sched *Scheduler) scheduleOne() {
 	pod := sched.config.NextPod()

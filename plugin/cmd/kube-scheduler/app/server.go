@@ -358,30 +358,47 @@ through the API as necessary.`,
 func Run(s *options.SchedulerServer) error {
 	// To help debugging, immediately log version
 	glog.Infof("Version: %+v", version.Get())
-}
 
-// NewSchedulerServer creates a runnable SchedulerServer from configuration.
-func NewSchedulerServer(config *componentconfig.KubeSchedulerConfiguration, master string) (*SchedulerServer, error) {
-	if config == nil {
-		return nil, errors.New("config is required")
+	// 创建一个到 master 的客户端连接
+	kubeClient, leaderElectionClient, err := createClients(s)
+	if err != nil {
+		return fmt.Errorf("unable to create kube client: %v", err)
 	}
 
-	// Configz registration.
-	if c, err := configz.New("componentconfig"); err == nil {
-		c.Set(config)
-	} else {
-		return nil, fmt.Errorf("unable to register configz: %s", err)
-	}
+	// 创建一个事件广播器，用于向集群中的 node 发送调度的信息
+	recorder := createRecorder(kubeClient, s)
 
-	// Prepare some Kube clients.
-	client, leaderElectionClient, eventClient, err := createClients(config.ClientConnection, master)
+	informerFactory := informers.NewSharedInformerFactory(kubeClient, 0)
+	// cache only non-terminal pods
+
+	podInformer := factory.NewPodInformer(kubeClient, 0, s.SchedulerName)
+	// Apply algorithms based on feature gates.
+	algorithmprovider.ApplyFeatureGates()
+
+	// 创建一个 scheduler server
+	sched, err := CreateScheduler(
+		s,
+		kubeClient,
+		informerFactory.Core().V1().Nodes(),
+		podInformer,
+		informerFactory.Core().V1().PersistentVolumes(),
+		informerFactory.Core().V1().PersistentVolumeClaims(),
+		informerFactory.Core().V1().ReplicationControllers(),
+		informerFactory.Extensions().V1beta1().ReplicaSets(),
+		informerFactory.Apps().V1beta1().StatefulSets(),
+		informerFactory.Core().V1().Services(),
+		informerFactory.Policy().V1beta1().PodDisruptionBudgets(),
+		recorder,
+	)
+
 	if err != nil {
 		return nil, err
 	}
 
-	// Prepare event clients.
-	eventBroadcaster := record.NewBroadcaster()
-	recorder := eventBroadcaster.NewRecorder(legacyscheme.Scheme, v1.EventSource{Component: config.SchedulerName})
+	if s.Port != -1 {
+		// 创建 HTTP 服务，用于性能分析，性能指标度量
+		go startHTTP(s)
+	}
 
 	// Set up leader election if enabled.
 	var leaderElectionConfig *leaderelection.LeaderElectionConfig
@@ -456,11 +473,9 @@ func makeLeaderElectionConfig(config componentconfig.KubeSchedulerLeaderElection
 func makeHealthzServer(config *componentconfig.KubeSchedulerConfiguration) *http.Server {
 	mux := http.NewServeMux()
 	healthz.InstallHandler(mux)
-	if config.HealthzBindAddress == config.MetricsBindAddress {
-		configz.InstallHandler(mux)
-		mux.Handle("/metrics", prometheus.Handler())
-	}
-	if config.EnableProfiling {
+
+	if s.EnableProfiling {
+		// /debug/pprof 接口方便性能数据收集
 		mux.HandleFunc("/debug/pprof/", pprof.Index)
 		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
@@ -479,6 +494,7 @@ func makeHealthzServer(config *componentconfig.KubeSchedulerConfiguration) *http
 func makeMetricsServer(config *componentconfig.KubeSchedulerConfiguration) *http.Server {
 	mux := http.NewServeMux()
 	configz.InstallHandler(mux)
+	//metrics 接口供prometheus 收集监控数据
 	mux.Handle("/metrics", prometheus.Handler())
 	if config.EnableProfiling {
 		mux.HandleFunc("/debug/pprof/", pprof.Index)
