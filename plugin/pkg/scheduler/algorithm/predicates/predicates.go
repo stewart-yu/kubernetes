@@ -190,6 +190,7 @@ func isVolumeConflict(volume v1.Volume, pod *v1.Pod) bool {
 	return false
 }
 
+// 检查节点卷是否冲突，是否已经被挂载，如果已经被其他使用则不能调度到该节点
 // NoDiskConflict evaluates if a pod can fit due to the volumes it requests, and those that
 // are already mounted. If there is already a volume mounted on that node, another pod that uses the same volume
 // can't be scheduled there.
