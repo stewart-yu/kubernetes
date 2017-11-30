@@ -19,6 +19,7 @@ package categories
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/discovery"
+	"fmt"
 )
 
 type CategoryExpander interface {
@@ -126,6 +127,9 @@ func (e discoveryFilteredExpander) Expand(category string) ([]schema.GroupResour
 		}
 	}
 
+	for _, item := range available {
+		fmt.Printf("test01: %v\n", item)
+	}
 	return available, ok
 }
 
