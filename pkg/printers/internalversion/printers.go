@@ -423,7 +423,7 @@ func AddHandlers(h printers.PrintHandler) {
 	h.TableHandler(limitRangeColumnDefinition, printLimitRange)
 	h.TableHandler(limitRangeColumnDefinition, printLimitRangeList)
 
-	AddDefaultHandlers(h)
+	//AddDefaultHandlers(h)
 }
 
 // AddDefaultHandlers adds handlers that can work with most Kubernetes objects.
