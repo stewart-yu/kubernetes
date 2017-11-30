@@ -418,7 +418,7 @@ func AddHandlers(h printers.PrintHandler) {
 
 	limitRangeColumnDefinition := []metav1alpha1.TableColumnDefinition{
 		{Name: "Name", Type: "string", Format: "name", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
-		{Name: "Age", Type: "string", Description: metav1.ObjectMeta{}.SwaggerDoc()["creationTimestamp"]},
+	//	{Name: "Age", Type: "string", Description: metav1.ObjectMeta{}.SwaggerDoc()["creationTimestamp"]},
 	}
 	h.TableHandler(limitRangeColumnDefinition, printLimitRange)
 	h.TableHandler(limitRangeColumnDefinition, printLimitRangeList)
@@ -440,20 +440,29 @@ func printLimitRange(obj *api.LimitRange, options printers.PrintOptions) ([]meta
 	row := metav1alpha1.TableRow{
 		Object: runtime.RawExtension{Object: obj},
 	}
-	//names, images := layoutContainerCells(obj.Spec.Containers)
-	row.Cells = append(row.Cells, obj.Name, translateTimestamp(obj.CreationTimestamp))
+
+	//row.Cells = append(row.Cells, obj.Name, translateTimestamp(obj.CreationTimestamp))
+	row.Cells = append(row.Cells, "my-limitrange")
+
 	return []metav1alpha1.TableRow{row}, nil
 }
 
 func printLimitRangeList(list *api.LimitRangeList, options printers.PrintOptions) ([]metav1alpha1.TableRow, error) {
-	rows := make([]metav1alpha1.TableRow, 0, len(list.Items))
+	/*rows := make([]metav1alpha1.TableRow, 0, len(list.Items))
 	for i := range list.Items {
 		r, err := printLimitRange(&list.Items[i], options)
 		if err != nil {
 			return nil, err
 		}
 		rows = append(rows, r...)
+	}*/
+	rows := make([]metav1alpha1.TableRow, 0, len(list.Items))
+	r, err := printLimitRange(&list.Items[0], options)
+	if err != nil {
+		return nil, err
 	}
+	rows = append(rows, r...)
+
 	return rows, nil
 }
 
