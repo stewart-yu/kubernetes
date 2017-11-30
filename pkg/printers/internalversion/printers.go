@@ -416,6 +416,13 @@ func AddHandlers(h printers.PrintHandler) {
 	h.TableHandler(controllerRevisionColumnDefinition, printControllerRevision)
 	h.TableHandler(controllerRevisionColumnDefinition, printControllerRevisionList)
 
+	limitRangeColumnDefinition := []metav1alpha1.TableColumnDefinition{
+		{Name: "Name", Type: "string", Format: "name", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
+		{Name: "Age", Type: "string", Description: metav1.ObjectMeta{}.SwaggerDoc()["creationTimestamp"]},
+	}
+	h.TableHandler(limitRangeColumnDefinition, printLimitRange)
+	h.TableHandler(limitRangeColumnDefinition, printLimitRangeList)
+
 	AddDefaultHandlers(h)
 }
 
@@ -428,6 +435,28 @@ func AddDefaultHandlers(h printers.PrintHandler) {
 	}
 	h.DefaultTableHandler(objectMetaColumnDefinitions, printObjectMeta)
 }
+
+func printLimitRange(obj *api.LimitRange, options printers.PrintOptions) ([]metav1alpha1.TableRow, error) {
+	row := metav1alpha1.TableRow{
+		Object: runtime.RawExtension{Object: obj},
+	}
+	//names, images := layoutContainerCells(obj.Spec.Containers)
+	row.Cells = append(row.Cells, obj.Name, translateTimestamp(obj.CreationTimestamp))
+	return []metav1alpha1.TableRow{row}, nil
+}
+
+func printLimitRangeList(list *api.LimitRangeList, options printers.PrintOptions) ([]metav1alpha1.TableRow, error) {
+	rows := make([]metav1alpha1.TableRow, 0, len(list.Items))
+	for i := range list.Items {
+		r, err := printLimitRange(&list.Items[i], options)
+		if err != nil {
+			return nil, err
+		}
+		rows = append(rows, r...)
+	}
+	return rows, nil
+}
+
 
 func printObjectMeta(obj runtime.Object, options printers.PrintOptions) ([]metav1alpha1.TableRow, error) {
 	if meta.IsListType(obj) {
