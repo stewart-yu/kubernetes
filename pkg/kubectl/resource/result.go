@@ -125,6 +125,10 @@ func (r *Result) Infos() ([]*Info, error) {
 		infos = append(infos, info)
 		return nil
 	})
+
+	for _, item := range infos {
+		fmt.Printf("%v\n", item)
+	}
 	err = utilerrors.FilterOut(err, r.ignoreErrors...)
 
 	r.info, r.err = infos, err
