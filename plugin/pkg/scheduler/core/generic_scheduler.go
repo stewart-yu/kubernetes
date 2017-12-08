@@ -243,7 +243,10 @@ func (g *genericScheduler) Preempt(pod *v1.Pod, nodeLister algorithm.NodeLister,
 		if node == nil {
 			return nil, nil, nil, err
 		}
+		// 如果scheduler配置extender scheduler，则再次将该pod和（假设）剔除victims的该node交给
+		// extender.Filter进行一下检查，只有检查通过了才返回该node作为最终选择的Preempt node。
 		passes, pErr := nodePassesExtendersForPreemption(pod, node.Name, nodeToVictims[node].pods, g.cachedNodeInfoMap, g.extenders)
+
 		if passes && pErr == nil {
 			// Lower priority pods nominated to run on this node, may no longer fit on
 			// this node. So, we should remove their nomination. Removing their
