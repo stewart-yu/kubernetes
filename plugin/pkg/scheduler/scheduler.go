@@ -206,16 +206,19 @@ func (sched *Scheduler) schedule(pod *v1.Pod) (string, error) {
 // preempt tries to create room for a pod that has failed to schedule, by preempting lower priority pods if possible.
 // If it succeeds, it adds the name of the node where preemption has happened to the pod annotations.
 // It returns the node name and an error if any.
+// preemptor是需要调度的pod, scheduleErr是调度失败的原因
 func (sched *Scheduler) preempt(preemptor *v1.Pod, scheduleErr error) (string, error) {
 	if !util.PodPriorityEnabled() {
 		glog.V(3).Infof("Pod priority feature is not enabled. No preemption is performed.")
 		return "", nil
 	}
+	// 重新获取pod调度失败原因
 	preemptor, err := sched.config.PodPreemptor.GetUpdatedPod(preemptor)
 	if err != nil {
 		glog.Errorf("Error getting the updated preemptor pod object: %v", err)
 		return "", err
 	}
+	// 最佳node和需要驱逐的pod、需要清除Annotation的pod
 	node, victims, nominatedPodsToClear, err := sched.config.Algorithm.Preempt(preemptor, sched.config.NodeLister, scheduleErr)
 	if err != nil {
 		glog.Errorf("Error preempting victims to make room for %v/%v.", preemptor.Namespace, preemptor.Name)
@@ -441,6 +444,7 @@ func (sched *Scheduler) scheduleOne() {
 
 	// Synchronously attempt to find a fit for the pod.
 	start := time.Now()
+	// 预选和优选Node
 	suggestedHost, err := sched.schedule(pod)
 	metrics.SchedulingAlgorithmLatency.Observe(metrics.SinceInMicroseconds(start))
 	if err != nil {
@@ -448,6 +452,7 @@ func (sched *Scheduler) scheduleOne() {
 		// preempt, with the expectation that the next time the pod is tried for scheduling it
 		// will fit due to the preemption. It is also possible that a different pod will schedule
 		// into the resources that were preempted, but this is harmless.
+		// 如果是预选出现错误，即没有选择到node
 		if fitError, ok := err.(*core.FitError); ok {
 			sched.preempt(pod, fitError)
 		}

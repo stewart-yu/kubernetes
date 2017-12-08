@@ -208,6 +208,7 @@ func (g *genericScheduler) Preempt(pod *v1.Pod, nodeLister algorithm.NodeLister,
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	// 判断该pod是否适合进行后续的Preemption
 	if !podEligibleToPreemptOthers(pod, g.cachedNodeInfoMap) {
 		glog.V(5).Infof("Pod %v is not eligible for more preemption.", pod.Name)
 		return nil, nil, nil, nil
@@ -219,21 +220,25 @@ func (g *genericScheduler) Preempt(pod *v1.Pod, nodeLister algorithm.NodeLister,
 	if len(allNodes) == 0 {
 		return nil, nil, nil, ErrNoNodesAvailable
 	}
+	// 选择潜在的node
 	potentialNodes := nodesWherePreemptionMightHelp(pod, allNodes, fitError.FailedPredicates)
 	if len(potentialNodes) == 0 {
 		glog.V(3).Infof("Preemption will not help schedule pod %v on any node.", pod.Name)
 		// In this case, we should clean-up any existing nominated node name of the pod.
 		return nil, nil, []*v1.Pod{pod}, nil
 	}
+
 	pdbs, err := g.cache.ListPDBs(labels.Everything())
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	// 选择出可行的node集合
 	nodeToVictims, err := selectNodesForPreemption(pod, g.cachedNodeInfoMap, potentialNodes, g.predicates, g.predicateMetaProducer, g.schedulingQueue, pdbs)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 	for len(nodeToVictims) > 0 {
+		// 从可行node中选择一个node
 		node := pickOneNodeForPreemption(nodeToVictims)
 		if node == nil {
 			return nil, nil, nil, err
@@ -655,6 +660,7 @@ func pickOneNodeForPreemption(nodesToVictims map[*v1.Node]*Victims) *v1.Node {
 	if len(nodesToVictims) == 0 {
 		return nil
 	}
+	// 选择驱逐pod最高优先级最小的node
 	minNumPDBViolatingPods := math.MaxInt32
 	var minPDBViolatingNodes []*v1.Node
 	for node, victims := range nodesToVictims {
@@ -700,6 +706,7 @@ func pickOneNodeForPreemption(nodesToVictims map[*v1.Node]*Victims) *v1.Node {
 
 	// There are a few nodes with minimum highest priority victim. Find the
 	// smallest sum of priorities.
+	// 如果存在几个同时满足的node， 则对pod优先级进行求和
 	minSumPriorities := int64(math.MaxInt64)
 	var minSumPriorityNodes []*v1.Node
 	for _, node := range minPriorityNodes {
@@ -725,6 +732,7 @@ func pickOneNodeForPreemption(nodesToVictims map[*v1.Node]*Victims) *v1.Node {
 
 	// There are a few nodes with minimum highest priority victim and sum of priorities.
 	// Find one with the minimum number of pods.
+	// 如果存在多个node， 则选择需要驱逐pod数量最少的node
 	minNumPods := math.MaxInt32
 	var minNumPodNodes []*v1.Node
 	for _, node := range minSumPriorityNodes {
@@ -768,7 +776,9 @@ func selectNodesForPreemption(pod *v1.Pod,
 		if meta != nil {
 			metaCopy = meta.ShallowCopy()
 		}
+		// 选择出需要驱逐的pod
 		pods, numPDBViolations, fits := selectVictimsOnNode(pod, metaCopy, nodeNameToInfo[nodeName], predicates, queue, pdbs)
+
 		if fits {
 			resultLock.Lock()
 			victims := Victims{
