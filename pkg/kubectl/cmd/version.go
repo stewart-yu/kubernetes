@@ -99,6 +99,7 @@ func (o *VersionOptions) Run(f cmdutil.Factory, out io.Writer) error {
 
 	switch o.output {
 	case "":
+		// normal
 		if o.short {
 			fmt.Fprintf(out, "Client Version: %s\n", clientVersion.GitVersion)
 			if serverVersion != nil {
@@ -111,12 +112,14 @@ func (o *VersionOptions) Run(f cmdutil.Factory, out io.Writer) error {
 			}
 		}
 	case "yaml":
+		// output with yaml
 		marshalled, err := yaml.Marshal(&versionInfo)
 		if err != nil {
 			return err
 		}
 		fmt.Fprintln(out, string(marshalled))
 	case "json":
+		// output with json
 		marshalled, err := json.MarshalIndent(&versionInfo, "", "  ")
 		if err != nil {
 			return err

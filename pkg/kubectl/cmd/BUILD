@@ -19,6 +19,7 @@ go_library(
         "certificates.go",
         "clusterinfo.go",
         "clusterinfo_dump.go",
+        "clusterresources.go",
         "cmd.go",
         "completion.go",
         "convert.go",
