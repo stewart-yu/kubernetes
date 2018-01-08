@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"github.com/spf13/cobra"
 	"k8s.io/kubernetes/pkg/kubectl/util/i18n"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
