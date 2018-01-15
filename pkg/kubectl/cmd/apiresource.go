@@ -69,7 +69,7 @@ func NewCmdApiResources(f cmdutil.Factory, out io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "api-resources [(-o|--output=)json|yaml|wide] ([APIRESOURCETYPE NAME] | [NAMESPACED TRUE|FALSE] ...) [flags]",
 		Short:   i18n.T("List all resources with different types"),
-		Long:    apiResourceLong + "\n\n" + cmdutil.ValidResourceTypeList(f),
+		Long:    apiResourceLong + "\n\n",
 		Example: apiResourcesExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdutil.CheckErr(options.ValidateArgs(cmd, args))
