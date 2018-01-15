@@ -21,7 +21,6 @@ import(
 	"k8s.io/kubernetes/pkg/kubectl/cmd/templates"
 	"k8s.io/kubernetes/pkg/kubectl/util/i18n"
 	"github.com/spf13/cobra"
-	"k8s.io/kubernetes/pkg/printers"
 
 	cmdutil "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 	"fmt"
@@ -62,7 +61,7 @@ var (
 
 // NewCmdApiResources creates a command object for the generic "apiresource" action, which
 // print all apiresource in cluster.
-func NewCmdApiResources(f cmdutil.Factory, out io.Writer, errOut io.Writer) *cobra.Command {
+func NewCmdApiResources(f cmdutil.Factory, out io.Writer) *cobra.Command {
 	options := &ApiResourcesOptions{
 		Out:    out,
 	}
