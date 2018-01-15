@@ -41,22 +41,22 @@ var (
 
 	apiResourcesExample = templates.Examples(i18n.T(`
 		# List all apisources with table.
-		kubectl apiresources
+		kubectl api-resources
 
 		# List all apisources with more information (such as Verbs set).
-		kubectl apiresources -o wide
+		kubectl api-resources -o wide
 
 		# List a single apiresource with specified NAME.
 		kubectl apiresources apiresource ***
 
 		# List a single apiresource in JSON/YAML output format.
-		kubectl apiresources -o json apiresource ***
+		kubectl api-resources -o json apiresource ***
 
 		# List all *** and *** together.
-		kubectl apiresources apiresource ***,***
+		kubectl api-resources apiresource ***,***
 
 		# List all apiresources marked namespace.
-		kubectl apiresources namespaced=true`))
+		kubectl api-resources namespaced=true`))
 )
 
 // NewCmdApiResources creates a command object for the generic "apiresource" action, which
@@ -67,7 +67,7 @@ func NewCmdApiResources(f cmdutil.Factory, out io.Writer) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:     "apiresource [(-o|--output=)json|yaml|wide] ([APIRESOURCETYPE NAME] | [NAMESPACED TRUE|FALSE] ...) [flags]",
+		Use:     "api-resources [(-o|--output=)json|yaml|wide] ([APIRESOURCETYPE NAME] | [NAMESPACED TRUE|FALSE] ...) [flags]",
 		Short:   i18n.T("List all resources with different types"),
 		Long:    apiResourceLong + "\n\n" + cmdutil.ValidResourceTypeList(f),
 		Example: apiResourcesExample,
@@ -79,6 +79,8 @@ func NewCmdApiResources(f cmdutil.Factory, out io.Writer) *cobra.Command {
 
 	cmd.Flags().BoolVar(&options.Namespaced, "namespaced", options.Namespaced, "If present, list the resource type for the requested object(s).")
 	cmd.Flags().StringVar(&options.ApiResource, "apiresource",  options.ApiResource, " from a server.")
+	cmd.Flags().StringP("output", "o", "", "Output format. One of: json|yaml|wide.")
+	cmd.Flags().Bool("no-headers", false, "When using the default or custom-column output format, don't print headers (default print headers).")
 
 	return cmd
 }
@@ -86,7 +88,7 @@ func NewCmdApiResources(f cmdutil.Factory, out io.Writer) *cobra.Command {
 // Validate checks the set of flags provided by the user.
 func (options *ApiResourcesOptions) ValidateArgs(cmd *cobra.Command, args []string) error {
 
-	outputMode := cmdutil.GetFlagString(cmd, "output")
+	outputMode := cmd.Flags().Lookup("output").Value.String()
 	if options.output != "" && options.output != "wide" && options.output != "yaml" && options.output != "json" {
 		return fmt.Errorf("unexpected -o output mode: %v. --output should be one of 'yaml'|'wide'|'json'", outputMode)
 	}
