@@ -78,7 +78,7 @@ func NewCmdApiResources(f cmdutil.Factory, out io.Writer) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.Namespaced, "namespaced", options.Namespaced, "If present, list the resource type for the requested object(s).")
-	cmd.Flags().StringVarP(&options.ApiResource, "apiresource", "ar", options.ApiResource, " from a server.")
+	cmd.Flags().StringVar(&options.ApiResource, "apiresource",  options.ApiResource, " from a server.")
 
 	return cmd
 }
