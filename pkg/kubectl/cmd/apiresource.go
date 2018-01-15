@@ -89,9 +89,17 @@ func NewCmdApiResources(f cmdutil.Factory, out io.Writer) *cobra.Command {
 func (options *ApiResourcesOptions) ValidateArgs(cmd *cobra.Command, args []string) error {
 
 	outputMode := cmd.Flags().Lookup("output").Value.String()
-	if options.output != "" && options.output != "wide" && options.output != "yaml" && options.output != "json" {
+	switch outputMode{
+	case "wide":
+		fallthrough
+	case "yaml":
+		fallthrough
+	case "json":
+		fallthrough
+	default:
 		return fmt.Errorf("unexpected -o output mode: %v. --output should be one of 'yaml'|'wide'|'json'", outputMode)
 	}
+
 	return nil
 }
 
