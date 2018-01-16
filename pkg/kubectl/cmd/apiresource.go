@@ -24,6 +24,7 @@ import(
 
 	cmdutil "k8s.io/kubernetes/pkg/kubectl/cmd/util"
 	"fmt"
+	"k8s.io/kubernetes/pkg/printers"
 )
 
 // ApiResourceOptions contains the input to the get command.
@@ -103,6 +104,50 @@ func (options *ApiResourcesOptions) ValidateArgs(cmd *cobra.Command, args []stri
 	return nil
 }
 
-func (o *ApiResourcesOptions) RunApiResources(f cmdutil.Factory, cmd *cobra.Command, args []string) error {
+// RunApiResources performs the get operation.
+func (options *ApiResourcesOptions) RunApiResources(f cmdutil.Factory, cmd *cobra.Command, args []string) error {
+
+	//r := f.NewBuilder().Unstructured().
+	//	ResourceTypeOrNameArgs(true, args...).
+	//	ContinueOnError().
+	//	Latest().
+	//	Flatten().
+	//	Do()
+
+	printOpts := ExtractApiResourcesPrintOptions(cmd)
+	printer, err := f.PrinterForOptions(printOpts)
+	if err != nil {
+		return err
+	}
+	fmt.Println(printer)
+	//filterOpts := cmdutil.ExtractCmdPrintOptions(cmd, options.AllNamespaces)
+	//filterFuncs := f.DefaultResourceFilterFunc()
+
+	//return options.printGeneric(printer, r, filterFuncs, filterOpts)
 	return nil
+}
+
+// ExtractCmdPrintOptions parses printer specific commandline args and
+// returns a PrintOptions object.
+// Requires that printer flags have been added to cmd (see AddPrinterFlags)
+func ExtractApiResourcesPrintOptions(cmd *cobra.Command) *printers.PrintOptions {
+	flags := cmd.Flags()
+
+	options := &printers.PrintOptions{
+		NoHeaders:          cmdutil.GetFlagBool(cmd, "no-headers"),
+		Wide:               cmdutil.GetWideFlag(cmd),
+	}
+
+	var outputFormat string
+	if flags.Lookup("output") != nil {
+		outputFormat = cmdutil.GetFlagString(cmd, "output")
+	}
+
+	if flags.Lookup("sort-by") != nil {
+		options.SortBy = cmdutil.GetFlagString(cmd, "sort-by")
+	}
+
+	options.OutputFormatType = outputFormat
+
+	return options
 }
