@@ -73,7 +73,7 @@ func NewCmdApiResources(f cmdutil.Factory, out io.Writer) *cobra.Command {
 		Long:    apiResourceLong + "\n\n",
 		Example: apiResourcesExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdutil.CheckErr(options.ValidateArgs(cmd, args))
+			//cmdutil.CheckErr(options.ValidateArgs(cmd, args))
 			cmdutil.CheckErr(options.RunApiResources(f, cmd, args))
 		},
 	}
@@ -87,22 +87,22 @@ func NewCmdApiResources(f cmdutil.Factory, out io.Writer) *cobra.Command {
 }
 
 // Validate checks the set of flags provided by the user.
-func (options *ApiResourcesOptions) ValidateArgs(cmd *cobra.Command, args []string) error {
-
-	outputMode := cmd.Flags().Lookup("output").Value.String()
-	switch outputMode{
-	case "wide":
-		fallthrough
-	case "yaml":
-		fallthrough
-	case "json":
-		fallthrough
-	default:
-		return fmt.Errorf("unexpected -o output mode: %v. --output should be one of 'yaml'|'wide'|'json'", outputMode)
-	}
-
-	return nil
-}
+//func (options *ApiResourcesOptions) ValidateArgs(cmd *cobra.Command, args []string) error {
+//
+//	outputMode := cmd.Flags().Lookup("output").Value.String()
+//	switch outputMode{
+//	case "wide":
+//		fallthrough
+//	case "yaml":
+//		fallthrough
+//	case "json":
+//		fallthrough
+//	default:
+//		return fmt.Errorf("unexpected -o output mode: %v. --output should be one of 'yaml'|'wide'|'json'", outputMode)
+//	}
+//
+//	return nil
+//}
 
 // RunApiResources performs the get operation.
 func (options *ApiResourcesOptions) RunApiResources(f cmdutil.Factory, cmd *cobra.Command, args []string) error {
