@@ -23,9 +23,24 @@ import(
 	"github.com/spf13/cobra"
 
 	cmdutil "k8s.io/kubernetes/pkg/kubectl/cmd/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"fmt"
 	"k8s.io/kubernetes/pkg/printers"
+	"sort"
+	"strings"
+	"github.com/golang/glog"
+	"k8s.io/kubernetes/pkg/registry/rbac/role"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/kubernetes/pkg/printers/internalversion"
+	"text/tabwriter"
+	"bytes"
 )
+
+// groupResource contains the APIGroup and APIResource
+type groupResource struct {
+	APIGroup    string
+	APIResource metav1.APIResource
+}
 
 // ApiResourceOptions contains the input to the get command.
 type ApiResourcesOptions struct {
@@ -150,4 +165,112 @@ func ExtractApiResourcesPrintOptions(cmd *cobra.Command) *printers.PrintOptions 
 	options.OutputFormatType = outputFormat
 
 	return options
+}
+
+func (o *ApiResourcesOptions) GetApiResource(f cmdutil.Factory) ([]groupResource, error) {
+	discoveryClient, err := f.DiscoveryClient()
+	if err != nil {
+		return nil, err
+	}
+
+	// Always request fresh data from the server
+	discoveryClient.Invalidate()
+
+	lists, err := discoveryClient.ServerPreferredResources()
+	if err != nil {
+		return nil, fmt.Errorf("get available api resources from server failed: %v", err)
+	}
+
+	resources := []groupResource{}
+
+	for _, list := range lists {
+		if len(list.APIResources) == 0 {
+			continue
+		}
+		gv, err := schema.ParseGroupVersion(list.GroupVersion)
+		if err != nil {
+			glog.V(1).Infof("Unable to parse groupversion %s:%s", list.GroupVersion, err.Error())
+			continue
+		}
+		for _, resource := range list.APIResources {
+			if len(resource.Verbs) == 0 {
+				continue
+			}
+			//// filter apiGroup
+			//if o.apiGroup != gv.Group {
+			//	continue
+			//}
+			//// filter namespaced
+			//if o.namespaced != resource.Namespaced {
+			//	continue
+			//}
+			resources = append(resources, groupResource{
+				APIGroup:    gv.Group,
+				APIResource: resource,
+			})
+		}
+	}
+
+	return resources, nil
+}
+
+func (options *ApiResourcesOptions) DescribeApiResource(f cmdutil.Factory, namespace, name string, describerSettings printers.DescriberSettings) (string, error) {
+	//role, err := d.Rbac().ClusterRoles().Get(name, metav1.GetOptions{})
+	//if err != nil {
+	//	return "", err
+	//}
+	//
+	//breakdownRules := []rbac.PolicyRule{}
+	//for _, rule := range role.Rules {
+	//	breakdownRules = append(breakdownRules, validation.BreakdownRule(rule)...)
+	//}
+	//sort.Stable(rbac.SortableRuleSlice(compactRules))
+	// 获取资源
+	// 资源排序
+	resources, err := options.GetApiResource(f)
+	if err != nil {
+		glog.V(1).Infof("Get available cluster resources failed: %v", err)
+	}
+
+	sort.Stable(sortableGroupResource(resources))
+
+	return tabbedString(func(out io.Writer) error {
+		w := internalversion.NewPrefixWriter(out)
+		w.Write(1, "Resources\tNon-Resource URLs\tResource Names\tVerbs\n")
+		w.Write(1, "---------\t-----------------\t--------------\t-----\n")
+		for _, r := range resources {
+			w.Write(1, "%s\t%v\t%v\t%v\n", combineResourceGroup(r.Resources, r.APIGroups), r.NonResourceURLs, r.ResourceNames, r.Verbs)
+		}
+
+		return nil
+	})
+}
+
+func tabbedString(f func(io.Writer) error) (string, error) {
+	out := new(tabwriter.Writer)
+	buf := &bytes.Buffer{}
+	out.Init(buf, 0, 8, 2, ' ', 0)
+
+	err := f(out)
+	if err != nil {
+		return "", err
+	}
+
+	out.Flush()
+	str := string(buf.String())
+	return str, nil
+}
+
+type sortableGroupResource []groupResource
+
+func (s sortableGroupResource) Len() int      { return len(s) }
+func (s sortableGroupResource) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s sortableGroupResource) Less(i, j int) bool {
+	ret := strings.Compare(s[i].APIGroup, s[j].APIGroup)
+	if ret > 0 {
+		return false
+	} else if ret == 0 {
+		return strings.Compare(s[i].APIResource.Name, s[j].APIResource.Name) < 0
+	}
+	return true
 }
