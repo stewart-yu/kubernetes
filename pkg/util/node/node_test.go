@@ -101,17 +101,23 @@ func TestPatchNodeStatus(t *testing.T) {
 		{
 			condition: v1.NodeCondition{
 				Type:               v1.NodeNetworkUnavailable,
+				Reason:             "RouteCreated",
+				Message:            "NodeController create implicit route",
+				LastTransitionTime: metav1.Now(),
+			},
+			ExpectErr: false,
+		},
+		{
+			condition: v1.NodeCondition{
 				Status:             v1.ConditionFalse,
 				Reason:             "RouteCreated",
 				Message:            "NodeController create implicit route",
 				LastTransitionTime: metav1.Now(),
 			},
-			ExpectErr: true,
+			ExpectErr: false,
 		},
 		{
 			condition: v1.NodeCondition{
-				Type:               v1.NodeNetworkUnavailable,
-				Status:             v1.ConditionFalse,
 				Reason:             "RouteCreated",
 				Message:            "NodeController create implicit route",
 				LastTransitionTime: metav1.Now(),
