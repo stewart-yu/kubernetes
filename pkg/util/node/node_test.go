@@ -21,6 +21,8 @@ import (
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 	kubeletapis "k8s.io/kubernetes/pkg/kubelet/apis"
 )
 
@@ -86,6 +88,45 @@ func TestGetPreferredAddress(t *testing.T) {
 		}
 		if address != tc.ExpectAddress {
 			t.Errorf("%s: expected address=%q, got %q", k, tc.ExpectAddress, address)
+		}
+	}
+}
+
+func TestPatchNodeStatus(t *testing.T) {
+	testclienSet := &kubernetes.Clientset{}
+	testcases := []struct {
+		condition v1.NodeCondition
+		ExpectErr bool
+	}{
+		{
+			condition: v1.NodeCondition{
+				Type:               v1.NodeNetworkUnavailable,
+				Status:             v1.ConditionFalse,
+				Reason:             "RouteCreated",
+				Message:            "NodeController create implicit route",
+				LastTransitionTime: metav1.Now(),
+			},
+			ExpectErr: true,
+		},
+		{
+			condition: v1.NodeCondition{
+				Type:               v1.NodeNetworkUnavailable,
+				Status:             v1.ConditionFalse,
+				Reason:             "RouteCreated",
+				Message:            "NodeController create implicit route",
+				LastTransitionTime: metav1.Now(),
+			},
+			ExpectErr: false,
+		},
+	}
+	for _, tc := range testcases {
+		actualErr := false
+		err := SetNodeCondition(testclienSet, types.NodeName("nodename"), tc.condition)
+		if err != nil {
+			actualErr = true
+		}
+		if actualErr != tc.ExpectErr {
+			t.Errorf("expected %v, got %v, error: %v", tc.ExpectErr, actualErr, err)
 		}
 	}
 }
