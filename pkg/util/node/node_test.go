@@ -92,7 +92,7 @@ func TestGetPreferredAddress(t *testing.T) {
 	}
 }
 
-func TestPatchNodeStatus(t *testing.T) {
+func TestSetNodeCondition(t *testing.T) {
 	testclienSet := &kubernetes.Clientset{}
 	testcases := []struct {
 		condition v1.NodeCondition
@@ -100,7 +100,7 @@ func TestPatchNodeStatus(t *testing.T) {
 	}{
 		{
 			condition: v1.NodeCondition{
-				Type:               v1.NodeNetworkUnavailable,
+				Type:               "wrong type",
 				Reason:             "RouteCreated",
 				Message:            "NodeController create implicit route",
 				LastTransitionTime: metav1.Now(),
@@ -109,7 +109,7 @@ func TestPatchNodeStatus(t *testing.T) {
 		},
 		{
 			condition: v1.NodeCondition{
-				Status:             v1.ConditionFalse,
+				Status:             "wrong status",
 				Reason:             "RouteCreated",
 				Message:            "NodeController create implicit route",
 				LastTransitionTime: metav1.Now(),
@@ -118,6 +118,7 @@ func TestPatchNodeStatus(t *testing.T) {
 		},
 		{
 			condition: v1.NodeCondition{
+				Status:             "wrong status",
 				Reason:             "RouteCreated",
 				Message:            "NodeController create implicit route",
 				LastTransitionTime: metav1.Now(),
