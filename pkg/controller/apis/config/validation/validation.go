@@ -31,51 +31,52 @@ import (
 // ValidateKubeControllerManagerConfiguration ensures validation of the ValidateKubeControllerManagerConfiguration struct
 func ValidateKubeControllerManagerConfiguration(obj *config.KubeControllerManagerConfiguration, allControllers, disabledByDefaultControllers []string) field.ErrorList {
 	allErrs := field.ErrorList{}
+	newPath := field.NewPath("KubeControllerManagerConfiguration")
 
 	// add validate for GenericControllerManagerConfiguration values
-	allErrs = append(allErrs, ValidateGenericControllerManagerConfiguration(&obj.Generic, allControllers, disabledByDefaultControllers, field.NewPath("generic"))...)
+	allErrs = append(allErrs, ValidateGenericControllerManagerConfiguration(&obj.Generic, allControllers, disabledByDefaultControllers, newPath.Child("generic"))...)
 	// add validate for KubeCloudSharedConfiguration values
-	allErrs = append(allErrs, ValidateKubeCloudSharedConfiguration(&obj.KubeCloudShared, field.NewPath("kubeCloudShared"))...)
+	allErrs = append(allErrs, ValidateKubeCloudSharedConfiguration(&obj.KubeCloudShared, newPath.Child("kubeCloudShared"))...)
 	// add validate for ServiceControllerConfiguration values
-	allErrs = append(allErrs, ValidateServiceControllerConfiguration(&obj.ServiceController, field.NewPath("serviceController"))...)
+	allErrs = append(allErrs, ValidateServiceControllerConfiguration(&obj.ServiceController, newPath.Child("serviceController"))...)
 	// add validate for AttachDetachControllerConfiguration values
-	allErrs = append(allErrs, ValidateAttachDetachControllerConfiguration(&obj.AttachDetachController, field.NewPath("attachDetachController"))...)
+	allErrs = append(allErrs, ValidateAttachDetachControllerConfiguration(&obj.AttachDetachController, newPath.Child("attachDetachController"))...)
 	// add validate for CSRSigningControllerConfiguration values
-	allErrs = append(allErrs, ValidateCSRSigningControllerConfiguration(&obj.CSRSigningController, field.NewPath("csrSigningController"))...)
+	allErrs = append(allErrs, ValidateCSRSigningControllerConfiguration(&obj.CSRSigningController, newPath.Child("csrSigningController"))...)
 	// add validate for DeploymentControllerConfiguration values
-	allErrs = append(allErrs, ValidateDeploymentControllerConfiguration(&obj.DeploymentController, field.NewPath("deploymentController"))...)
+	allErrs = append(allErrs, ValidateDeploymentControllerConfiguration(&obj.DeploymentController, newPath.Child("deploymentController"))...)
 	// add validate for DaemonSetControllerConfiguration values
-	allErrs = append(allErrs, ValidateDaemonSetControllerConfiguration(&obj.DaemonSetController, field.NewPath("daemonSetController"))...)
+	allErrs = append(allErrs, ValidateDaemonSetControllerConfiguration(&obj.DaemonSetController, newPath.Child("daemonSetController"))...)
 	// add validate for DeprecatedControllerConfiguration values
-	allErrs = append(allErrs, ValidateDeprecatedControllerConfiguration(&obj.DeprecatedController, field.NewPath("deprecatedController"))...)
+	allErrs = append(allErrs, ValidateDeprecatedControllerConfiguration(&obj.DeprecatedController, newPath.Child("deprecatedController"))...)
 	// add validate for EndpointControllerConfiguration values
-	allErrs = append(allErrs, ValidateEndpointControllerConfiguration(&obj.EndpointController, field.NewPath("endpointController"))...)
+	allErrs = append(allErrs, ValidateEndpointControllerConfiguration(&obj.EndpointController, newPath.Child("endpointController"))...)
 	// add validate for GarbageCollectorControllerConfiguration values
-	allErrs = append(allErrs, ValidateGarbageCollectorControllerConfiguration(&obj.GarbageCollectorController, field.NewPath("garbageCollectorController"))...)
+	allErrs = append(allErrs, ValidateGarbageCollectorControllerConfiguration(&obj.GarbageCollectorController, newPath.Child("garbageCollectorController"))...)
 	// add validate for HPAControllerConfiguration values
-	allErrs = append(allErrs, ValidateHPAControllerConfiguration(&obj.HPAController, field.NewPath("hpaController"))...)
+	allErrs = append(allErrs, ValidateHPAControllerConfiguration(&obj.HPAController, newPath.Child("hpaController"))...)
 	// add validate for JobControllerConfiguration values
-	allErrs = append(allErrs, ValidateJobControllerConfiguration(&obj.JobController, field.NewPath("jobController"))...)
+	allErrs = append(allErrs, ValidateJobControllerConfiguration(&obj.JobController, newPath.Child("jobController"))...)
 	// add validate for NamespaceControllerConfiguration values
-	allErrs = append(allErrs, ValidateNamespaceControllerConfiguration(&obj.NamespaceController, field.NewPath("namespaceController"))...)
+	allErrs = append(allErrs, ValidateNamespaceControllerConfiguration(&obj.NamespaceController, newPath.Child("namespaceController"))...)
 	// add validate for NodeIPAMControllerConfiguration values
-	allErrs = append(allErrs, ValidateNodeIPAMControllerConfiguration(&obj.NodeIPAMController, field.NewPath("nodeIPAMController"))...)
+	allErrs = append(allErrs, ValidateNodeIPAMControllerConfiguration(&obj.NodeIPAMController, newPath.Child("nodeIPAMController"))...)
 	// add validate for NodeLifecycleControllerConfiguration values
-	allErrs = append(allErrs, ValidateNodeLifecycleControllerConfiguration(&obj.NodeLifecycleController, field.NewPath("nodeLifecycleController"))...)
+	allErrs = append(allErrs, ValidateNodeLifecycleControllerConfiguration(&obj.NodeLifecycleController, newPath.Child("nodeLifecycleController"))...)
 	// add validate for PersistentVolumeBinderControllerConfiguration values
-	allErrs = append(allErrs, ValidatePersistentVolumeBinderControllerConfiguration(&obj.PersistentVolumeBinderController, field.NewPath("persistentVolumeBinderController"))...)
+	allErrs = append(allErrs, ValidatePersistentVolumeBinderControllerConfiguration(&obj.PersistentVolumeBinderController, newPath.Child("persistentVolumeBinderController"))...)
 	// add validate for PodGCControllerConfiguration values
-	allErrs = append(allErrs, ValidatePodGCControllerConfiguration(&obj.PodGCController, field.NewPath("podGCController"))...)
+	allErrs = append(allErrs, ValidatePodGCControllerConfiguration(&obj.PodGCController, newPath.Child("podGCController"))...)
 	// add validate for ReplicaSetControllerConfiguration values
-	allErrs = append(allErrs, ValidateReplicaSetControllerConfiguration(&obj.ReplicaSetController, field.NewPath("replicaSetController"))...)
+	allErrs = append(allErrs, ValidateReplicaSetControllerConfiguration(&obj.ReplicaSetController, newPath.Child("replicaSetController"))...)
 	// add validate for ReplicationControllerConfiguration values
-	allErrs = append(allErrs, ValidateReplicationControllerConfiguration(&obj.ReplicationController, field.NewPath("replicationController"))...)
+	allErrs = append(allErrs, ValidateReplicationControllerConfiguration(&obj.ReplicationController, newPath.Child("replicationController"))...)
 	// add validate for ResourceQuotaControllerConfiguration values
-	allErrs = append(allErrs, ValidateResourceQuotaControllerConfiguration(&obj.ResourceQuotaController, field.NewPath("resourceQuotaController"))...)
+	allErrs = append(allErrs, ValidateResourceQuotaControllerConfiguration(&obj.ResourceQuotaController, newPath.Child("resourceQuotaController"))...)
 	// add validate for SAControllerConfiguration values
-	allErrs = append(allErrs, ValidateSAControllerConfigurationration(&obj.SAController, field.NewPath("saController"))...)
+	allErrs = append(allErrs, ValidateSAControllerConfigurationration(&obj.SAController, newPath.Child("saController"))...)
 	// add validate for TTLAfterFinishedControllerConfiguration values
-	allErrs = append(allErrs, ValidateTTLAfterFinishedControllerConfiguration(&obj.TTLAfterFinishedController, field.NewPath("ttlAfterFinishedController"))...)
+	allErrs = append(allErrs, ValidateTTLAfterFinishedControllerConfiguration(&obj.TTLAfterFinishedController, newPath.Child("ttlAfterFinishedController"))...)
 
 	return allErrs
 }
@@ -89,14 +90,14 @@ func ValidateGenericControllerManagerConfiguration(obj *config.GenericController
 	if obj.MinResyncPeriod.Duration <= 0 {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("minResyncPeriod"), obj.MinResyncPeriod, "must be greater than zero"))
 	}
-	allErrs = append(allErrs, apimachinery.ValidateClientConnectionConfiguration(&obj.ClientConnection, field.NewPath("clientConnection"))...)
+	allErrs = append(allErrs, apimachinery.ValidateClientConnectionConfiguration(&obj.ClientConnection, fldPath.Child("clientConnection"))...)
 	if obj.ControllerStartInterval.Duration <= 0 {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("controllerStartInterval"), obj.ControllerStartInterval, "must be greater than zero"))
 	}
 	if !obj.LeaderElection.LeaderElect {
 		return allErrs
 	}
-	allErrs = append(allErrs, apiserver.ValidateLeaderElectionConfiguration(&obj.LeaderElection, field.NewPath("leaderElectionConfiguration"))...)
+	allErrs = append(allErrs, apiserver.ValidateLeaderElectionConfiguration(&obj.LeaderElection, fldPath.Child("leaderElectionConfiguration"))...)
 	allControllersSet := sets.NewString(allControllers...)
 	for _, controller := range obj.Controllers {
 		if controller == "*" {
@@ -120,6 +121,9 @@ func ValidateKubeCloudSharedConfiguration(obj *config.KubeCloudSharedConfigurati
 
 	if !obj.ConfigureCloudRoutes {
 		return allErrs
+	}
+	if len(obj.ClusterName) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("clusterName"), ""))
 	}
 	if obj.NodeMonitorPeriod.Duration <= 0 {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("nodeMonitorPeriod"), obj.NodeMonitorPeriod, "must be greater than zero"))
@@ -326,7 +330,7 @@ func ValidatePersistentVolumeBinderControllerConfiguration(obj *config.Persisten
 	if obj.PVClaimBinderSyncPeriod.Duration <= 0 {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("pvclaimBinderSyncPeriod"), obj.PVClaimBinderSyncPeriod, "must be greater than zero"))
 	}
-	allErrs = append(allErrs, ValidateVolumeConfiguration(&obj.VolumeConfiguration, field.NewPath("volumeConfiguration"))...)
+	allErrs = append(allErrs, ValidateVolumeConfiguration(&obj.VolumeConfiguration, fldPath.Child("volumeConfiguration"))...)
 
 	return allErrs
 }
@@ -410,7 +414,7 @@ func ValidateVolumeConfiguration(obj *config.VolumeConfiguration, fldPath *field
 	if len(obj.FlexVolumePluginDir) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("flexVolumePluginDir"), ""))
 	}
-	allErrs = append(allErrs, ValidatePersistentVolumeRecyclerConfiguration(&obj.PersistentVolumeRecyclerConfiguration, field.NewPath("persistentVolumeRecyclerConfiguration"))...)
+	allErrs = append(allErrs, ValidatePersistentVolumeRecyclerConfiguration(&obj.PersistentVolumeRecyclerConfiguration, fldPath.Child("persistentVolumeRecyclerConfiguration"))...)
 
 	return allErrs
 }

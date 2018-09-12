@@ -22,6 +22,7 @@ import (
 
 	apimachineryconfig "k8s.io/apimachinery/pkg/apis/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	apiserverconfig "k8s.io/apiserver/pkg/apis/config"
 	"k8s.io/kubernetes/pkg/controller/apis/config"
 )
@@ -276,10 +277,347 @@ func TestValidateKubeControllerManagerConfiguration(t *testing.T) {
 	}
 }
 
-//func TestValidateGenericControllerManagerConfiguration(t *testing.T) {
-//	addrInvalid := validConfig.DeepCopy()
-//	addrInvalid.Generic.Address = "0.0.0.0.0"
-//
-//	minResyncPeriodLt0 := validConfig.DeepCopy()
-//	minResyncPeriodLt0.Generic.MinResyncPeriod = metav1.Duration{Duration: -1 * time.Second}
-//}
+func TestValidateGenericControllerManagerConfiguration(t *testing.T) {
+
+	newPath := field.NewPath("KubeControllerManagerConfiguration")
+	validConfig := &config.GenericControllerManagerConfiguration{
+		Address:         "0.0.0.0",
+		MinResyncPeriod: metav1.Duration{Duration: 8 * time.Hour},
+		ClientConnection: apimachineryconfig.ClientConnectionConfiguration{
+			Burst: 100,
+		},
+		ControllerStartInterval: metav1.Duration{Duration: 2 * time.Minute},
+		LeaderElection: apiserverconfig.LeaderElectionConfiguration{
+			ResourceLock:  "configmap",
+			LeaderElect:   true,
+			LeaseDuration: metav1.Duration{Duration: 30 * time.Second},
+			RenewDeadline: metav1.Duration{Duration: 15 * time.Second},
+			RetryPeriod:   metav1.Duration{Duration: 5 * time.Second},
+		},
+		Controllers: []string{"*"},
+	}
+
+	addrInvalid := validConfig.DeepCopy()
+	addrInvalid.Address = "0.0.0.0.0"
+
+	minResyncPeriodLt0 := validConfig.DeepCopy()
+	minResyncPeriodLt0.MinResyncPeriod = metav1.Duration{Duration: -1 * time.Second}
+
+	clientConnectionInvalidate := validConfig.DeepCopy()
+	clientConnectionInvalidate.ClientConnection.Burst = -1
+
+	controllerStartIntervalLt0 := validConfig.DeepCopy()
+	controllerStartIntervalLt0.ControllerStartInterval = metav1.Duration{Duration: -1 * time.Second}
+
+	scenarios := map[string]struct {
+		expectedToFail bool
+		config         *config.GenericControllerManagerConfiguration
+	}{
+		"good": {
+			expectedToFail: false,
+			config:         validConfig,
+		},
+		"address-invalid": {
+			expectedToFail: true,
+			config:         addrInvalid,
+		},
+		"min-resync-period-invalid": {
+			expectedToFail: true,
+			config:         minResyncPeriodLt0,
+		},
+		"client-connection-invalid": {
+			expectedToFail: true,
+			config:         clientConnectionInvalidate,
+		},
+		"controller-start-interval-invalid": {
+			expectedToFail: true,
+			config:         controllerStartIntervalLt0,
+		},
+	}
+
+	for name, scenario := range scenarios {
+		errs := ValidateGenericControllerManagerConfiguration(scenario.config, []string{""}, []string{""}, newPath.Child("generic"))
+		if len(errs) == 0 && scenario.expectedToFail {
+			t.Errorf("Unexpected success for scenario: %s", name)
+		}
+		if len(errs) > 0 && !scenario.expectedToFail {
+			t.Errorf("Unexpected failure for scenario: %s - %+v", name, errs)
+		}
+	}
+}
+
+func TestValidateKubeCloudSharedConfiguration(t *testing.T) {
+
+	newPath := field.NewPath("KubeControllerManagerConfiguration")
+	validConfig := &config.KubeCloudSharedConfiguration{
+		RouteReconciliationPeriod: metav1.Duration{Duration: 30 * time.Second},
+		NodeMonitorPeriod:         metav1.Duration{Duration: 10 * time.Second},
+		ClusterName:               "kubenetes",
+		ConfigureCloudRoutes:      true,
+	}
+
+	routeReconciliationPeriodLt0 := validConfig.DeepCopy()
+	routeReconciliationPeriodLt0.RouteReconciliationPeriod = metav1.Duration{Duration: -1 * time.Second}
+
+	nodeMonitorPeriodLt0 := validConfig.DeepCopy()
+	nodeMonitorPeriodLt0.RouteReconciliationPeriod = metav1.Duration{Duration: -1 * time.Second}
+
+	clusterNameMissing := validConfig.DeepCopy()
+	clusterNameMissing.ClusterName = ""
+
+	scenarios := map[string]struct {
+		expectedToFail bool
+		config         *config.KubeCloudSharedConfiguration
+	}{
+		"good": {
+			expectedToFail: false,
+			config:         validConfig,
+		},
+		"route-reconciliation-period-lt-0": {
+			expectedToFail: true,
+			config:         routeReconciliationPeriodLt0,
+		},
+		"node-monitor-period-lt-0": {
+			expectedToFail: true,
+			config:         nodeMonitorPeriodLt0,
+		},
+		"cluster-name-missing": {
+			expectedToFail: true,
+			config:         clusterNameMissing,
+		},
+	}
+
+	for name, scenario := range scenarios {
+		errs := ValidateKubeCloudSharedConfiguration(scenario.config, newPath.Child("kubeCloudShared"))
+		if len(errs) == 0 && scenario.expectedToFail {
+			t.Errorf("Unexpected success for scenario: %s", name)
+		}
+		if len(errs) > 0 && !scenario.expectedToFail {
+			t.Errorf("Unexpected failure for scenario: %s - %+v", name, errs)
+		}
+
+	}
+}
+
+func TestValidateCSRSigningControllerConfiguration(t *testing.T) {
+	newPath := field.NewPath("KubeControllerManagerConfiguration")
+	validConfig := &config.CSRSigningControllerConfiguration{
+		ClusterSigningCertFile: "/cluster-signing-cert",
+		ClusterSigningKeyFile:  "/cluster-signing-key",
+		ClusterSigningDuration: metav1.Duration{Duration: 10 * time.Hour},
+	}
+
+	clusterSigningDurationLt0 := validConfig.DeepCopy()
+	clusterSigningDurationLt0.ClusterSigningDuration = metav1.Duration{Duration: -1 * time.Second}
+
+	clusterSigningCertFileNotExist := validConfig.DeepCopy()
+	clusterSigningCertFileNotExist.ClusterSigningCertFile = ""
+
+	clusterSigningKeyFileNotExist := validConfig.DeepCopy()
+	clusterSigningKeyFileNotExist.ClusterSigningKeyFile = ""
+
+	scenarios := map[string]struct {
+		expectedToFail bool
+		config         *config.CSRSigningControllerConfiguration
+	}{
+		"good": {
+			expectedToFail: false,
+			config:         validConfig,
+		},
+		"cluster-signingCertFile-not-exist": {
+			expectedToFail: true,
+			config:         clusterSigningCertFileNotExist,
+		},
+		"min-resync-period-invalid": {
+			expectedToFail: true,
+			config:         clusterSigningKeyFileNotExist,
+		},
+	}
+
+	for name, scenario := range scenarios {
+		errs := ValidateCSRSigningControllerConfiguration(scenario.config, newPath.Child("csrSigningController"))
+		if len(errs) == 0 && scenario.expectedToFail {
+			t.Errorf("Unexpected success for scenario: %s", name)
+		}
+		if len(errs) > 0 && !scenario.expectedToFail {
+			t.Errorf("Unexpected failure for scenario: %s - %+v", name, errs)
+		}
+
+	}
+}
+
+func TestValidateHPAControllerConfiguration(t *testing.T) {
+	newPath := field.NewPath("KubeControllerManagerConfiguration")
+	validConfig := &config.HPAControllerConfiguration{
+		HorizontalPodAutoscalerSyncPeriod:                   metav1.Duration{Duration: 45 * time.Second},
+		HorizontalPodAutoscalerUpscaleForbiddenWindow:       metav1.Duration{Duration: 1 * time.Minute},
+		HorizontalPodAutoscalerDownscaleForbiddenWindow:     metav1.Duration{Duration: 2 * time.Minute},
+		HorizontalPodAutoscalerDownscaleStabilizationWindow: metav1.Duration{Duration: 3 * time.Minute},
+		HorizontalPodAutoscalerCPUInitializationPeriod:      metav1.Duration{Duration: 90 * time.Second},
+		HorizontalPodAutoscalerInitialReadinessDelay:        metav1.Duration{Duration: 50 * time.Second},
+		HorizontalPodAutoscalerTolerance:                    0.1,
+		HorizontalPodAutoscalerUseRESTClients:               true,
+	}
+
+	clusterSigningDurationLt0 := validConfig.DeepCopy()
+	clusterSigningDurationLt0.HorizontalPodAutoscalerSyncPeriod = metav1.Duration{Duration: -1 * time.Second}
+
+	HorizontalPodAutoscalerUpscaleForbiddenWindowLt0 := validConfig.DeepCopy()
+	HorizontalPodAutoscalerUpscaleForbiddenWindowLt0.HorizontalPodAutoscalerUpscaleForbiddenWindow = metav1.Duration{Duration: -1 * time.Second}
+
+	HorizontalPodAutoscalerDownscaleForbiddenWindowLt0 := validConfig.DeepCopy()
+	HorizontalPodAutoscalerDownscaleForbiddenWindowLt0.HorizontalPodAutoscalerDownscaleForbiddenWindow = metav1.Duration{Duration: -1 * time.Second}
+
+	HorizontalPodAutoscalerDownscaleStabilizationWindowLt0 := validConfig.DeepCopy()
+	HorizontalPodAutoscalerDownscaleStabilizationWindowLt0.HorizontalPodAutoscalerDownscaleStabilizationWindow = metav1.Duration{Duration: -1 * time.Second}
+
+	HorizontalPodAutoscalerCPUInitializationPeriodLt0 := validConfig.DeepCopy()
+	HorizontalPodAutoscalerCPUInitializationPeriodLt0.HorizontalPodAutoscalerCPUInitializationPeriod = metav1.Duration{Duration: -1 * time.Second}
+
+	HorizontalPodAutoscalerInitialReadinessDelayLt0 := validConfig.DeepCopy()
+	HorizontalPodAutoscalerInitialReadinessDelayLt0.HorizontalPodAutoscalerInitialReadinessDelay = metav1.Duration{Duration: -1 * time.Second}
+
+	scenarios := map[string]struct {
+		expectedToFail bool
+		config         *config.HPAControllerConfiguration
+	}{
+		"good": {
+			expectedToFail: false,
+			config:         validConfig,
+		},
+		"cluster-signing-duration-lt-0": {
+			expectedToFail: true,
+			config:         clusterSigningDurationLt0,
+		},
+		"horizontal-pod-autoscaler-upscale-forbidden-window-lt-0": {
+			expectedToFail: true,
+			config:         HorizontalPodAutoscalerUpscaleForbiddenWindowLt0,
+		},
+		"horizontal-pod-autoscaler-downscale-forbidden-window-lt-0": {
+			expectedToFail: true,
+			config:         HorizontalPodAutoscalerDownscaleForbiddenWindowLt0,
+		},
+		"horizontal-pod-autoscaler-downscale-stabilization-window-lt-0": {
+			expectedToFail: true,
+			config:         HorizontalPodAutoscalerDownscaleStabilizationWindowLt0,
+		},
+		"horizontal-pod-autoscaler-cpu-initialization-period-lt-0": {
+			expectedToFail: true,
+			config:         HorizontalPodAutoscalerCPUInitializationPeriodLt0,
+		},
+		"horizontal-pod-autoscaler-initial-readiness-delay-lt-0": {
+			expectedToFail: true,
+			config:         HorizontalPodAutoscalerInitialReadinessDelayLt0,
+		},
+	}
+
+	for name, scenario := range scenarios {
+		errs := ValidateHPAControllerConfiguration(scenario.config, newPath.Child("hpaController"))
+		if len(errs) == 0 && scenario.expectedToFail {
+			t.Errorf("Unexpected success for scenario: %s", name)
+		}
+		if len(errs) > 0 && !scenario.expectedToFail {
+			t.Errorf("Unexpected failure for scenario: %s - %+v", name, errs)
+		}
+	}
+
+}
+
+func TestValidateNodeLifecycleControllerConfiguration(t *testing.T) {
+	newPath := field.NewPath("KubeControllerManagerConfiguration")
+	validConfig := &config.NodeLifecycleControllerConfiguration{
+		EnableTaintManager:     true,
+		NodeMonitorGracePeriod: metav1.Duration{Duration: 30 * time.Second},
+		NodeStartupGracePeriod: metav1.Duration{Duration: 30 * time.Second},
+		PodEvictionTimeout:     metav1.Duration{Duration: 2 * time.Minute},
+	}
+
+	nodeMonitorGracePeriodLt0 := validConfig.DeepCopy()
+	nodeMonitorGracePeriodLt0.NodeMonitorGracePeriod = metav1.Duration{Duration: -1 * time.Second}
+
+	nodeStartupGracePeriodLt0 := validConfig.DeepCopy()
+	nodeStartupGracePeriodLt0.NodeStartupGracePeriod = metav1.Duration{Duration: -1 * time.Second}
+
+	podEvictionTimeoutLt0 := validConfig.DeepCopy()
+	podEvictionTimeoutLt0.PodEvictionTimeout = metav1.Duration{Duration: -1 * time.Second}
+
+	scenarios := map[string]struct {
+		expectedToFail bool
+		config         *config.NodeLifecycleControllerConfiguration
+	}{
+		"good": {
+			expectedToFail: false,
+			config:         validConfig,
+		},
+		"node-monitor-grace-period-lt-0": {
+			expectedToFail: true,
+			config:         nodeMonitorGracePeriodLt0,
+		},
+		"node-start-grace-period-lt-0": {
+			expectedToFail: true,
+			config:         nodeStartupGracePeriodLt0,
+		},
+		"pod-eviction-timeout-lt-0": {
+			expectedToFail: true,
+			config:         podEvictionTimeoutLt0,
+		},
+	}
+
+	for name, scenario := range scenarios {
+		errs := ValidateNodeLifecycleControllerConfiguration(scenario.config, newPath.Child("nodeLifecycleController"))
+		if len(errs) == 0 && scenario.expectedToFail {
+			t.Errorf("Unexpected success for scenario: %s", name)
+		}
+		if len(errs) > 0 && !scenario.expectedToFail {
+			t.Errorf("Unexpected failure for scenario: %s - %+v", name, errs)
+		}
+
+	}
+}
+
+func TestValidatePersistentVolumeBinderControllerConfiguration(t *testing.T) {
+	newPath := field.NewPath("KubeControllerManagerConfiguration")
+	validConfig := &config.PersistentVolumeBinderControllerConfiguration{
+		PVClaimBinderSyncPeriod: metav1.Duration{Duration: 30 * time.Second},
+		VolumeConfiguration: config.VolumeConfiguration{
+			EnableDynamicProvisioning:  false,
+			EnableHostPathProvisioning: true,
+			FlexVolumePluginDir:        "/flex-volume-plugin",
+			PersistentVolumeRecyclerConfiguration: config.PersistentVolumeRecyclerConfiguration{
+				MaximumRetry:             3,
+				MinimumTimeoutNFS:        200,
+				IncrementTimeoutNFS:      45,
+				MinimumTimeoutHostPath:   45,
+				IncrementTimeoutHostPath: 45,
+			},
+		},
+	}
+
+	pvClaimBinderSyncPeriodLt0 := validConfig.DeepCopy()
+	pvClaimBinderSyncPeriodLt0.PVClaimBinderSyncPeriod = metav1.Duration{Duration: -30 * time.Second}
+
+	scenarios := map[string]struct {
+		expectedToFail bool
+		config         *config.PersistentVolumeBinderControllerConfiguration
+	}{
+		"good": {
+			expectedToFail: false,
+			config:         validConfig,
+		},
+		"pv-claim-binder-sync-period-lt-0": {
+			expectedToFail: true,
+			config:         pvClaimBinderSyncPeriodLt0,
+		},
+	}
+
+	for name, scenario := range scenarios {
+		errs := ValidatePersistentVolumeBinderControllerConfiguration(scenario.config, newPath.Child("persistentVolumeBinderController"))
+		if len(errs) == 0 && scenario.expectedToFail {
+			t.Errorf("Unexpected success for scenario: %s", name)
+		}
+		if len(errs) > 0 && !scenario.expectedToFail {
+			t.Errorf("Unexpected failure for scenario: %s - %+v", name, errs)
+		}
+
+	}
+}
