@@ -18,50 +18,107 @@ package util
 
 import (
 	"testing"
+
+	utilsexec "k8s.io/utils/exec"
+	fakeexec "k8s.io/utils/exec/testing"
 )
 
 func TestGetCgroupDriverDocker(t *testing.T) {
+
+	prefix := "Cgroup Driver: "
 	testCases := []struct {
-		name          string
-		info          string
-		expectedError bool
+		name               string
+		dockerInfo         string
+		expectCgroupDriver string
+		expectedError      bool
 	}{
 		{
-			name:          "valid: value is 'cgroupfs'",
-			info:          `Cgroup Driver: cgroupfs`,
-			expectedError: false,
+			name: "valid: value is 'cgroupfs'",
+			dockerInfo: "Logging Driver: json-file\n" +
+				"Cgroup Driver: cgroupfs\n" +
+				"Plugins:\n" +
+				" Volume: local\n" +
+				" Network: bridge host macvlan null overlay\n" +
+				"Docker Root Dir: /var/lib/docker\n",
+			expectCgroupDriver: `Cgroup Driver: cgroupfs`,
+			expectedError:      false,
 		},
 		{
-			name:          "valid: value is 'systemd'",
-			info:          `Cgroup Driver: systemd`,
-			expectedError: false,
+			name: "valid: value is 'systemd'",
+			dockerInfo: "Logging Driver: json-file\n" +
+				"Cgroup Driver: systemd\n" +
+				"Plugins:\n" +
+				" Volume: local\n" +
+				" Network: bridge host macvlan null overlay\n" +
+				"Docker Root Dir: /var/lib/docker\n",
+			expectCgroupDriver: `Cgroup Driver: systemd`,
+			expectedError:      false,
 		},
 		{
-			name:          "invalid: missing 'Cgroup Driver' key and value",
-			info:          "",
-			expectedError: true,
+			name: "invalid: missing 'Cgroup Driver' key and value",
+			dockerInfo: "Logging Driver: json-file\n" +
+				"Plugins:\n" +
+				" Volume: local\n" +
+				" Network: bridge host macvlan null overlay\n" +
+				"Docker Root Dir: /var/lib/docker\n",
+			expectCgroupDriver: "",
+			expectedError:      true,
 		},
 		{
-			name:          "invalid: only a 'Cgroup Driver' key is present",
-			info:          `Cgroup Driver`,
-			expectedError: true,
+			name: "invalid: only a 'Cgroup Driver' key is present",
+			dockerInfo: "Logging Driver: json-file\n" +
+				"Cgroup Driver\n" +
+				"Plugins:\n" +
+				" Volume: local\n" +
+				" Network: bridge host macvlan null overlay\n" +
+				"Docker Root Dir: /var/lib/docker\n",
+			expectCgroupDriver: `Cgroup Driver`,
+			expectedError:      true,
 		},
 		{
-			name:          "invalid: empty 'Cgroup Driver' value",
-			info:          `Cgroup Driver: `,
-			expectedError: true,
+			name: "invalid: empty 'Cgroup Driver' value",
+			dockerInfo: "Logging Driver: json-file\n" +
+				"Cgroup Driver:\n" +
+				"Plugins:\n" +
+				" Volume: local\n" +
+				" Network: bridge host macvlan null overlay\n" +
+				"Docker Root Dir: /var/lib/docker\n",
+			expectCgroupDriver: `Cgroup Driver: `,
+			expectedError:      true,
 		},
 		{
-			name:          "invalid: unknown 'Cgroup Driver' value",
-			info:          `Cgroup Driver: invalid-value`,
-			expectedError: true,
+			name: "invalid: unknown 'Cgroup Driver' value",
+			dockerInfo: "Logging Driver: json-file\n" +
+				"Cgroup Driver: invalid-value\n" +
+				"Plugins:\n" +
+				" Volume: local\n" +
+				" Network: bridge host macvlan null overlay\n" +
+				"Docker Root Dir: /var/lib/docker\n",
+			expectCgroupDriver: `Cgroup Driver: invalid-value`,
+			expectedError:      true,
 		},
 	}
 
-	for _, tc := range testCases {
+	for i, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if _, err := getCgroupDriverFromDockerInfo(tc.info); (err != nil) != tc.expectedError {
-				t.Fatalf("expected error: %v, saw: %v, error: %v", tc.expectedError, (err != nil), err)
+			fcmd := fakeexec.FakeCmd{
+				CombinedOutputScript: []fakeexec.FakeCombinedOutputAction{
+					func() ([]byte, error) { return []byte(testCases[i].dockerInfo), nil }},
+			}
+
+			fexec := fakeexec.FakeExec{
+				CommandScript: []fakeexec.FakeCommandAction{
+					func(cmd string, args ...string) utilsexec.Cmd { return fakeexec.InitFakeCmd(&fcmd, cmd, args...) },
+				},
+			}
+
+			cgroupDriver, err := GetCgroupDriverDocker(&fexec)
+
+			if (err != nil) != tc.expectedError {
+				t.Fatalf("case[%d]:expected error: %v, saw: %v, error: %v", i, tc.expectedError, (err != nil), err)
+			}
+			if (err == nil) && (prefix+cgroupDriver != tc.expectCgroupDriver) {
+				t.Fatalf("case[%d]:expected cgroupDriver: %v, saw: %v", i, tc.expectCgroupDriver, prefix+cgroupDriver)
 			}
 		})
 	}

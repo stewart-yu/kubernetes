@@ -50,7 +50,7 @@ func validateCgroupDriver(driver string) error {
 // If the minimum supported Docker version in K8s becomes 1.13, move to
 // this syntax.
 func callDockerInfo(execer utilsexec.Interface) (string, error) {
-	out, err := execer.Command("docker", "info").Output()
+	out, err := execer.Command("docker", "info").CombinedOutput()
 	if err != nil {
 		return "", errors.Wrap(err, "cannot execute 'docker info'")
 	}
