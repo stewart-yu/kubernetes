@@ -315,7 +315,7 @@ func TestGroupVersionKindsHasKind(t *testing.T) {
 			expected: true,
 		},
 		{
-			name: "FooBazNoBaz",
+			name: "FooBarNoBaz",
 			gvks: []schema.GroupVersionKind{
 				{Group: "foo.k8s.io", Version: "v1", Kind: "Foo"},
 				{Group: "bar.k8s.io", Version: "v2", Kind: "Bar"},
