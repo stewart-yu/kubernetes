@@ -22,8 +22,6 @@ import (
 	"net"
 	"time"
 
-	"k8s.io/klog"
-
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -36,6 +34,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/klog"
 	ccmconfig "k8s.io/kubernetes/cmd/cloud-controller-manager/app/apis/config"
 	ccmconfigscheme "k8s.io/kubernetes/cmd/cloud-controller-manager/app/apis/config/scheme"
 	ccmconfigv1alpha1 "k8s.io/kubernetes/cmd/cloud-controller-manager/app/apis/config/v1alpha1"
@@ -147,7 +146,7 @@ func (o *CloudControllerManagerOptions) Flags(allControllers, disabledByDefaultC
 }
 
 // ApplyTo fills up cloud controller manager config with options.
-func (o *CloudControllerManagerOptions) ApplyTo(c *cloudcontrollerconfig.Config, userAgent string) error {
+func (o *CloudControllerManagerOptions) ApplyTo(c *cloudcontrollerconfig.Config) error {
 	var err error
 	if err = o.Generic.ApplyTo(&c.ComponentConfig.Generic); err != nil {
 		return err
@@ -172,39 +171,6 @@ func (o *CloudControllerManagerOptions) ApplyTo(c *cloudcontrollerconfig.Config,
 			return err
 		}
 	}
-
-	c.Kubeconfig, err = clientcmd.BuildConfigFromFlags(o.Master, o.Kubeconfig)
-	if err != nil {
-		return err
-	}
-	c.Kubeconfig.ContentConfig.ContentType = o.Generic.ClientConnection.ContentType
-	c.Kubeconfig.QPS = o.Generic.ClientConnection.QPS
-	c.Kubeconfig.Burst = int(o.Generic.ClientConnection.Burst)
-
-	c.Client, err = clientset.NewForConfig(restclient.AddUserAgent(c.Kubeconfig, userAgent))
-	if err != nil {
-		return err
-	}
-
-	c.LeaderElectionClient = clientset.NewForConfigOrDie(restclient.AddUserAgent(c.Kubeconfig, "leader-election"))
-
-	c.EventRecorder = createRecorder(c.Client, userAgent)
-
-	rootClientBuilder := controller.SimpleControllerClientBuilder{
-		ClientConfig: c.Kubeconfig,
-	}
-	if c.ComponentConfig.KubeCloudShared.UseServiceAccountCredentials {
-		c.ClientBuilder = controller.SAControllerClientBuilder{
-			ClientConfig:         restclient.AnonymousClientConfig(c.Kubeconfig),
-			CoreClient:           c.Client.CoreV1(),
-			AuthenticationClient: c.Client.AuthenticationV1(),
-			Namespace:            metav1.NamespaceSystem,
-		}
-	} else {
-		c.ClientBuilder = rootClientBuilder
-	}
-	c.VersionedClient = rootClientBuilder.ClientOrDie("shared-informers")
-	c.SharedInformers = informers.NewSharedInformerFactory(c.VersionedClient, resyncPeriod(c)())
 
 	// sync back to component config
 	// TODO: find more elegant way than syncing back the values.
@@ -253,8 +219,47 @@ func (o *CloudControllerManagerOptions) Config(allControllers, disabledByDefault
 		return nil, fmt.Errorf("error creating self-signed certificates: %v", err)
 	}
 
-	c := &cloudcontrollerconfig.Config{}
-	if err := o.ApplyTo(c, CloudControllerManagerUserAgent); err != nil {
+	kubeconfig, err := clientcmd.BuildConfigFromFlags(o.Master, o.Kubeconfig)
+	if err != nil {
+		return nil, err
+	}
+	kubeconfig.ContentConfig.ContentType = o.Generic.ClientConnection.ContentType
+	kubeconfig.QPS = o.Generic.ClientConnection.QPS
+	kubeconfig.Burst = int(o.Generic.ClientConnection.Burst)
+
+	client, err := clientset.NewForConfig(restclient.AddUserAgent(kubeconfig, CloudControllerManagerUserAgent))
+	if err != nil {
+		return nil, err
+	}
+
+	leaderElectionClient := clientset.NewForConfigOrDie(restclient.AddUserAgent(kubeconfig, "leader-election"))
+
+	eventRecorder := createRecorder(client, CloudControllerManagerUserAgent)
+
+	c := &cloudcontrollerconfig.Config{
+		Client:               client,
+		Kubeconfig:           kubeconfig,
+		EventRecorder:        eventRecorder,
+		LeaderElectionClient: leaderElectionClient,
+	}
+
+	rootClientBuilder := controller.SimpleControllerClientBuilder{
+		ClientConfig: c.Kubeconfig,
+	}
+	if c.ComponentConfig.KubeCloudShared.UseServiceAccountCredentials {
+		c.ClientBuilder = controller.SAControllerClientBuilder{
+			ClientConfig:         restclient.AnonymousClientConfig(c.Kubeconfig),
+			CoreClient:           c.Client.CoreV1(),
+			AuthenticationClient: c.Client.AuthenticationV1(),
+			Namespace:            metav1.NamespaceSystem,
+		}
+	} else {
+		c.ClientBuilder = rootClientBuilder
+	}
+	c.VersionedClient = rootClientBuilder.ClientOrDie("shared-informers")
+	c.SharedInformers = informers.NewSharedInformerFactory(c.VersionedClient, resyncPeriod(c)())
+
+	if err := o.ApplyTo(c); err != nil {
 		return nil, err
 	}
 
