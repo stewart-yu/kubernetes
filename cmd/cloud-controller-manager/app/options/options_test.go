@@ -116,7 +116,7 @@ func TestDefaultFlags(t *testing.T) {
 func TestAddFlags(t *testing.T) {
 	fs := pflag.NewFlagSet("addflagstest", pflag.ContinueOnError)
 	s, _ := NewCloudControllerManagerOptions()
-	for _, f := range s.Flags().FlagSets {
+	for _, f := range s.Flags([]string{""}, []string{""}).FlagSets {
 		fs.AddFlagSet(f)
 	}
 

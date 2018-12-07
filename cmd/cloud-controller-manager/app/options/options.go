@@ -125,11 +125,9 @@ func NewDefaultComponentConfig(insecurePort int32) (*ccmconfig.CloudControllerMa
 }
 
 // Flags returns flags for a specific APIServer by section name
-func (o *CloudControllerManagerOptions) Flags() apiserverflag.NamedFlagSets {
+func (o *CloudControllerManagerOptions) Flags(allControllers, disabledByDefaultControllers []string) apiserverflag.NamedFlagSets {
 	fss := apiserverflag.NamedFlagSets{}
-	o.Generic.AddFlags(&fss, []string{}, []string{})
-	// TODO: Implement the --controllers flag fully for the ccm
-	fss.FlagSet("generic").MarkHidden("controllers")
+	o.Generic.AddFlags(&fss, allControllers, disabledByDefaultControllers)
 	o.KubeCloudShared.AddFlags(fss.FlagSet("generic"))
 	o.ServiceController.AddFlags(fss.FlagSet("service controller"))
 
@@ -219,10 +217,10 @@ func (o *CloudControllerManagerOptions) ApplyTo(c *cloudcontrollerconfig.Config,
 }
 
 // Validate is used to validate config before launching the cloud controller manager
-func (o *CloudControllerManagerOptions) Validate() error {
+func (o *CloudControllerManagerOptions) Validate(allControllers, disabledByDefaultControllers []string) error {
 	errors := []error{}
 
-	errors = append(errors, o.Generic.Validate(nil, nil)...)
+	errors = append(errors, o.Generic.Validate(allControllers, disabledByDefaultControllers)...)
 	errors = append(errors, o.KubeCloudShared.Validate()...)
 	errors = append(errors, o.ServiceController.Validate()...)
 	errors = append(errors, o.SecureServing.Validate()...)
@@ -246,8 +244,8 @@ func resyncPeriod(c *cloudcontrollerconfig.Config) func() time.Duration {
 }
 
 // Config return a cloud controller manager config objective
-func (o *CloudControllerManagerOptions) Config() (*cloudcontrollerconfig.Config, error) {
-	if err := o.Validate(); err != nil {
+func (o *CloudControllerManagerOptions) Config(allControllers, disabledByDefaultControllers []string) (*cloudcontrollerconfig.Config, error) {
+	if err := o.Validate(allControllers, disabledByDefaultControllers); err != nil {
 		return nil, err
 	}
 
