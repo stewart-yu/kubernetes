@@ -16,6 +16,7 @@ go_library(
         "//pkg/client/leaderelectionconfig:go_default_library",
         "//pkg/cloudprovider/providers:go_default_library",
         "//pkg/controller/apis/config:go_default_library",
+        "//pkg/controller/service/config:go_default_library",
         "//staging/src/k8s.io/apimachinery/pkg/util/sets:go_default_library",
         "//staging/src/k8s.io/apiserver/pkg/util/flag:go_default_library",
         "//staging/src/k8s.io/apiserver/pkg/util/globalflag:go_default_library",
