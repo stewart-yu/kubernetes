@@ -46,6 +46,8 @@ import (
 	serviceconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/service/config/v1alpha1"
 	serviceaccountconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/serviceaccount/config/v1alpha1"
 	ttlafterfinishedconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/ttlafterfinished/config/v1alpha1"
+	attachdetachconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/volume/attachdetach/config/v1alpha1"
+	persistentvolumeconfigv1alpha1 "k8s.io/kubernetes/pkg/controller/volume/persistentvolume/config/v1alpha1"
 )
 
 func init() {
@@ -55,16 +57,6 @@ func init() {
 // RegisterConversions adds conversion functions to the given scheme.
 // Public to allow building arbitrary schemes.
 func RegisterConversions(s *runtime.Scheme) error {
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.AttachDetachControllerConfiguration)(nil), (*config.AttachDetachControllerConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_AttachDetachControllerConfiguration_To_config_AttachDetachControllerConfiguration(a.(*v1alpha1.AttachDetachControllerConfiguration), b.(*config.AttachDetachControllerConfiguration), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*config.AttachDetachControllerConfiguration)(nil), (*v1alpha1.AttachDetachControllerConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_config_AttachDetachControllerConfiguration_To_v1alpha1_AttachDetachControllerConfiguration(a.(*config.AttachDetachControllerConfiguration), b.(*v1alpha1.AttachDetachControllerConfiguration), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddGeneratedConversionFunc((*v1alpha1.CloudProviderConfiguration)(nil), (*config.CloudProviderConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_CloudProviderConfiguration_To_config_CloudProviderConfiguration(a.(*v1alpha1.CloudProviderConfiguration), b.(*config.CloudProviderConfiguration), scope)
 	}); err != nil {
@@ -125,36 +117,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.PersistentVolumeBinderControllerConfiguration)(nil), (*config.PersistentVolumeBinderControllerConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_PersistentVolumeBinderControllerConfiguration_To_config_PersistentVolumeBinderControllerConfiguration(a.(*v1alpha1.PersistentVolumeBinderControllerConfiguration), b.(*config.PersistentVolumeBinderControllerConfiguration), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*config.PersistentVolumeBinderControllerConfiguration)(nil), (*v1alpha1.PersistentVolumeBinderControllerConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_config_PersistentVolumeBinderControllerConfiguration_To_v1alpha1_PersistentVolumeBinderControllerConfiguration(a.(*config.PersistentVolumeBinderControllerConfiguration), b.(*v1alpha1.PersistentVolumeBinderControllerConfiguration), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.PersistentVolumeRecyclerConfiguration)(nil), (*config.PersistentVolumeRecyclerConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_PersistentVolumeRecyclerConfiguration_To_config_PersistentVolumeRecyclerConfiguration(a.(*v1alpha1.PersistentVolumeRecyclerConfiguration), b.(*config.PersistentVolumeRecyclerConfiguration), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*config.PersistentVolumeRecyclerConfiguration)(nil), (*v1alpha1.PersistentVolumeRecyclerConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_config_PersistentVolumeRecyclerConfiguration_To_v1alpha1_PersistentVolumeRecyclerConfiguration(a.(*config.PersistentVolumeRecyclerConfiguration), b.(*v1alpha1.PersistentVolumeRecyclerConfiguration), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*v1alpha1.VolumeConfiguration)(nil), (*config.VolumeConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1alpha1_VolumeConfiguration_To_config_VolumeConfiguration(a.(*v1alpha1.VolumeConfiguration), b.(*config.VolumeConfiguration), scope)
-	}); err != nil {
-		return err
-	}
-	if err := s.AddGeneratedConversionFunc((*config.VolumeConfiguration)(nil), (*v1alpha1.VolumeConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_config_VolumeConfiguration_To_v1alpha1_VolumeConfiguration(a.(*config.VolumeConfiguration), b.(*v1alpha1.VolumeConfiguration), scope)
-	}); err != nil {
-		return err
-	}
 	if err := s.AddConversionFunc((*config.GenericControllerManagerConfiguration)(nil), (*v1alpha1.GenericControllerManagerConfiguration)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_config_GenericControllerManagerConfiguration_To_v1alpha1_GenericControllerManagerConfiguration(a.(*config.GenericControllerManagerConfiguration), b.(*v1alpha1.GenericControllerManagerConfiguration), scope)
 	}); err != nil {
@@ -176,28 +138,6 @@ func RegisterConversions(s *runtime.Scheme) error {
 		return err
 	}
 	return nil
-}
-
-func autoConvert_v1alpha1_AttachDetachControllerConfiguration_To_config_AttachDetachControllerConfiguration(in *v1alpha1.AttachDetachControllerConfiguration, out *config.AttachDetachControllerConfiguration, s conversion.Scope) error {
-	out.DisableAttachDetachReconcilerSync = in.DisableAttachDetachReconcilerSync
-	out.ReconcilerSyncLoopPeriod = in.ReconcilerSyncLoopPeriod
-	return nil
-}
-
-// Convert_v1alpha1_AttachDetachControllerConfiguration_To_config_AttachDetachControllerConfiguration is an autogenerated conversion function.
-func Convert_v1alpha1_AttachDetachControllerConfiguration_To_config_AttachDetachControllerConfiguration(in *v1alpha1.AttachDetachControllerConfiguration, out *config.AttachDetachControllerConfiguration, s conversion.Scope) error {
-	return autoConvert_v1alpha1_AttachDetachControllerConfiguration_To_config_AttachDetachControllerConfiguration(in, out, s)
-}
-
-func autoConvert_config_AttachDetachControllerConfiguration_To_v1alpha1_AttachDetachControllerConfiguration(in *config.AttachDetachControllerConfiguration, out *v1alpha1.AttachDetachControllerConfiguration, s conversion.Scope) error {
-	out.DisableAttachDetachReconcilerSync = in.DisableAttachDetachReconcilerSync
-	out.ReconcilerSyncLoopPeriod = in.ReconcilerSyncLoopPeriod
-	return nil
-}
-
-// Convert_config_AttachDetachControllerConfiguration_To_v1alpha1_AttachDetachControllerConfiguration is an autogenerated conversion function.
-func Convert_config_AttachDetachControllerConfiguration_To_v1alpha1_AttachDetachControllerConfiguration(in *config.AttachDetachControllerConfiguration, out *v1alpha1.AttachDetachControllerConfiguration, s conversion.Scope) error {
-	return autoConvert_config_AttachDetachControllerConfiguration_To_v1alpha1_AttachDetachControllerConfiguration(in, out, s)
 }
 
 func autoConvert_v1alpha1_CloudProviderConfiguration_To_config_CloudProviderConfiguration(in *v1alpha1.CloudProviderConfiguration, out *config.CloudProviderConfiguration, s conversion.Scope) error {
@@ -351,7 +291,7 @@ func autoConvert_v1alpha1_KubeControllerManagerConfiguration_To_config_KubeContr
 	if err := Convert_v1alpha1_KubeCloudSharedConfiguration_To_config_KubeCloudSharedConfiguration(&in.KubeCloudShared, &out.KubeCloudShared, s); err != nil {
 		return err
 	}
-	if err := Convert_v1alpha1_AttachDetachControllerConfiguration_To_config_AttachDetachControllerConfiguration(&in.AttachDetachController, &out.AttachDetachController, s); err != nil {
+	if err := attachdetachconfigv1alpha1.Convert_v1alpha1_AttachDetachControllerConfiguration_To_config_AttachDetachControllerConfiguration(&in.AttachDetachController, &out.AttachDetachController, s); err != nil {
 		return err
 	}
 	if err := signerconfigv1alpha1.Convert_v1alpha1_CSRSigningControllerConfiguration_To_config_CSRSigningControllerConfiguration(&in.CSRSigningController, &out.CSRSigningController, s); err != nil {
@@ -387,7 +327,7 @@ func autoConvert_v1alpha1_KubeControllerManagerConfiguration_To_config_KubeContr
 	if err := nodelifecycleconfigv1alpha1.Convert_v1alpha1_NodeLifecycleControllerConfiguration_To_config_NodeLifecycleControllerConfiguration(&in.NodeLifecycleController, &out.NodeLifecycleController, s); err != nil {
 		return err
 	}
-	if err := Convert_v1alpha1_PersistentVolumeBinderControllerConfiguration_To_config_PersistentVolumeBinderControllerConfiguration(&in.PersistentVolumeBinderController, &out.PersistentVolumeBinderController, s); err != nil {
+	if err := persistentvolumeconfigv1alpha1.Convert_v1alpha1_PersistentVolumeBinderControllerConfiguration_To_config_PersistentVolumeBinderControllerConfiguration(&in.PersistentVolumeBinderController, &out.PersistentVolumeBinderController, s); err != nil {
 		return err
 	}
 	if err := podgcconfigv1alpha1.Convert_v1alpha1_PodGCControllerConfiguration_To_config_PodGCControllerConfiguration(&in.PodGCController, &out.PodGCController, s); err != nil {
@@ -426,7 +366,7 @@ func autoConvert_config_KubeControllerManagerConfiguration_To_v1alpha1_KubeContr
 	if err := Convert_config_KubeCloudSharedConfiguration_To_v1alpha1_KubeCloudSharedConfiguration(&in.KubeCloudShared, &out.KubeCloudShared, s); err != nil {
 		return err
 	}
-	if err := Convert_config_AttachDetachControllerConfiguration_To_v1alpha1_AttachDetachControllerConfiguration(&in.AttachDetachController, &out.AttachDetachController, s); err != nil {
+	if err := attachdetachconfigv1alpha1.Convert_config_AttachDetachControllerConfiguration_To_v1alpha1_AttachDetachControllerConfiguration(&in.AttachDetachController, &out.AttachDetachController, s); err != nil {
 		return err
 	}
 	if err := signerconfigv1alpha1.Convert_config_CSRSigningControllerConfiguration_To_v1alpha1_CSRSigningControllerConfiguration(&in.CSRSigningController, &out.CSRSigningController, s); err != nil {
@@ -462,7 +402,7 @@ func autoConvert_config_KubeControllerManagerConfiguration_To_v1alpha1_KubeContr
 	if err := nodelifecycleconfigv1alpha1.Convert_config_NodeLifecycleControllerConfiguration_To_v1alpha1_NodeLifecycleControllerConfiguration(&in.NodeLifecycleController, &out.NodeLifecycleController, s); err != nil {
 		return err
 	}
-	if err := Convert_config_PersistentVolumeBinderControllerConfiguration_To_v1alpha1_PersistentVolumeBinderControllerConfiguration(&in.PersistentVolumeBinderController, &out.PersistentVolumeBinderController, s); err != nil {
+	if err := persistentvolumeconfigv1alpha1.Convert_config_PersistentVolumeBinderControllerConfiguration_To_v1alpha1_PersistentVolumeBinderControllerConfiguration(&in.PersistentVolumeBinderController, &out.PersistentVolumeBinderController, s); err != nil {
 		return err
 	}
 	if err := podgcconfigv1alpha1.Convert_config_PodGCControllerConfiguration_To_v1alpha1_PodGCControllerConfiguration(&in.PodGCController, &out.PodGCController, s); err != nil {
@@ -492,100 +432,4 @@ func autoConvert_config_KubeControllerManagerConfiguration_To_v1alpha1_KubeContr
 // Convert_config_KubeControllerManagerConfiguration_To_v1alpha1_KubeControllerManagerConfiguration is an autogenerated conversion function.
 func Convert_config_KubeControllerManagerConfiguration_To_v1alpha1_KubeControllerManagerConfiguration(in *config.KubeControllerManagerConfiguration, out *v1alpha1.KubeControllerManagerConfiguration, s conversion.Scope) error {
 	return autoConvert_config_KubeControllerManagerConfiguration_To_v1alpha1_KubeControllerManagerConfiguration(in, out, s)
-}
-
-func autoConvert_v1alpha1_PersistentVolumeBinderControllerConfiguration_To_config_PersistentVolumeBinderControllerConfiguration(in *v1alpha1.PersistentVolumeBinderControllerConfiguration, out *config.PersistentVolumeBinderControllerConfiguration, s conversion.Scope) error {
-	out.PVClaimBinderSyncPeriod = in.PVClaimBinderSyncPeriod
-	if err := Convert_v1alpha1_VolumeConfiguration_To_config_VolumeConfiguration(&in.VolumeConfiguration, &out.VolumeConfiguration, s); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Convert_v1alpha1_PersistentVolumeBinderControllerConfiguration_To_config_PersistentVolumeBinderControllerConfiguration is an autogenerated conversion function.
-func Convert_v1alpha1_PersistentVolumeBinderControllerConfiguration_To_config_PersistentVolumeBinderControllerConfiguration(in *v1alpha1.PersistentVolumeBinderControllerConfiguration, out *config.PersistentVolumeBinderControllerConfiguration, s conversion.Scope) error {
-	return autoConvert_v1alpha1_PersistentVolumeBinderControllerConfiguration_To_config_PersistentVolumeBinderControllerConfiguration(in, out, s)
-}
-
-func autoConvert_config_PersistentVolumeBinderControllerConfiguration_To_v1alpha1_PersistentVolumeBinderControllerConfiguration(in *config.PersistentVolumeBinderControllerConfiguration, out *v1alpha1.PersistentVolumeBinderControllerConfiguration, s conversion.Scope) error {
-	out.PVClaimBinderSyncPeriod = in.PVClaimBinderSyncPeriod
-	if err := Convert_config_VolumeConfiguration_To_v1alpha1_VolumeConfiguration(&in.VolumeConfiguration, &out.VolumeConfiguration, s); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Convert_config_PersistentVolumeBinderControllerConfiguration_To_v1alpha1_PersistentVolumeBinderControllerConfiguration is an autogenerated conversion function.
-func Convert_config_PersistentVolumeBinderControllerConfiguration_To_v1alpha1_PersistentVolumeBinderControllerConfiguration(in *config.PersistentVolumeBinderControllerConfiguration, out *v1alpha1.PersistentVolumeBinderControllerConfiguration, s conversion.Scope) error {
-	return autoConvert_config_PersistentVolumeBinderControllerConfiguration_To_v1alpha1_PersistentVolumeBinderControllerConfiguration(in, out, s)
-}
-
-func autoConvert_v1alpha1_PersistentVolumeRecyclerConfiguration_To_config_PersistentVolumeRecyclerConfiguration(in *v1alpha1.PersistentVolumeRecyclerConfiguration, out *config.PersistentVolumeRecyclerConfiguration, s conversion.Scope) error {
-	out.MaximumRetry = in.MaximumRetry
-	out.MinimumTimeoutNFS = in.MinimumTimeoutNFS
-	out.PodTemplateFilePathNFS = in.PodTemplateFilePathNFS
-	out.IncrementTimeoutNFS = in.IncrementTimeoutNFS
-	out.PodTemplateFilePathHostPath = in.PodTemplateFilePathHostPath
-	out.MinimumTimeoutHostPath = in.MinimumTimeoutHostPath
-	out.IncrementTimeoutHostPath = in.IncrementTimeoutHostPath
-	return nil
-}
-
-// Convert_v1alpha1_PersistentVolumeRecyclerConfiguration_To_config_PersistentVolumeRecyclerConfiguration is an autogenerated conversion function.
-func Convert_v1alpha1_PersistentVolumeRecyclerConfiguration_To_config_PersistentVolumeRecyclerConfiguration(in *v1alpha1.PersistentVolumeRecyclerConfiguration, out *config.PersistentVolumeRecyclerConfiguration, s conversion.Scope) error {
-	return autoConvert_v1alpha1_PersistentVolumeRecyclerConfiguration_To_config_PersistentVolumeRecyclerConfiguration(in, out, s)
-}
-
-func autoConvert_config_PersistentVolumeRecyclerConfiguration_To_v1alpha1_PersistentVolumeRecyclerConfiguration(in *config.PersistentVolumeRecyclerConfiguration, out *v1alpha1.PersistentVolumeRecyclerConfiguration, s conversion.Scope) error {
-	out.MaximumRetry = in.MaximumRetry
-	out.MinimumTimeoutNFS = in.MinimumTimeoutNFS
-	out.PodTemplateFilePathNFS = in.PodTemplateFilePathNFS
-	out.IncrementTimeoutNFS = in.IncrementTimeoutNFS
-	out.PodTemplateFilePathHostPath = in.PodTemplateFilePathHostPath
-	out.MinimumTimeoutHostPath = in.MinimumTimeoutHostPath
-	out.IncrementTimeoutHostPath = in.IncrementTimeoutHostPath
-	return nil
-}
-
-// Convert_config_PersistentVolumeRecyclerConfiguration_To_v1alpha1_PersistentVolumeRecyclerConfiguration is an autogenerated conversion function.
-func Convert_config_PersistentVolumeRecyclerConfiguration_To_v1alpha1_PersistentVolumeRecyclerConfiguration(in *config.PersistentVolumeRecyclerConfiguration, out *v1alpha1.PersistentVolumeRecyclerConfiguration, s conversion.Scope) error {
-	return autoConvert_config_PersistentVolumeRecyclerConfiguration_To_v1alpha1_PersistentVolumeRecyclerConfiguration(in, out, s)
-}
-
-func autoConvert_v1alpha1_VolumeConfiguration_To_config_VolumeConfiguration(in *v1alpha1.VolumeConfiguration, out *config.VolumeConfiguration, s conversion.Scope) error {
-	if err := v1.Convert_Pointer_bool_To_bool(&in.EnableHostPathProvisioning, &out.EnableHostPathProvisioning, s); err != nil {
-		return err
-	}
-	if err := v1.Convert_Pointer_bool_To_bool(&in.EnableDynamicProvisioning, &out.EnableDynamicProvisioning, s); err != nil {
-		return err
-	}
-	if err := Convert_v1alpha1_PersistentVolumeRecyclerConfiguration_To_config_PersistentVolumeRecyclerConfiguration(&in.PersistentVolumeRecyclerConfiguration, &out.PersistentVolumeRecyclerConfiguration, s); err != nil {
-		return err
-	}
-	out.FlexVolumePluginDir = in.FlexVolumePluginDir
-	return nil
-}
-
-// Convert_v1alpha1_VolumeConfiguration_To_config_VolumeConfiguration is an autogenerated conversion function.
-func Convert_v1alpha1_VolumeConfiguration_To_config_VolumeConfiguration(in *v1alpha1.VolumeConfiguration, out *config.VolumeConfiguration, s conversion.Scope) error {
-	return autoConvert_v1alpha1_VolumeConfiguration_To_config_VolumeConfiguration(in, out, s)
-}
-
-func autoConvert_config_VolumeConfiguration_To_v1alpha1_VolumeConfiguration(in *config.VolumeConfiguration, out *v1alpha1.VolumeConfiguration, s conversion.Scope) error {
-	if err := v1.Convert_bool_To_Pointer_bool(&in.EnableHostPathProvisioning, &out.EnableHostPathProvisioning, s); err != nil {
-		return err
-	}
-	if err := v1.Convert_bool_To_Pointer_bool(&in.EnableDynamicProvisioning, &out.EnableDynamicProvisioning, s); err != nil {
-		return err
-	}
-	if err := Convert_config_PersistentVolumeRecyclerConfiguration_To_v1alpha1_PersistentVolumeRecyclerConfiguration(&in.PersistentVolumeRecyclerConfiguration, &out.PersistentVolumeRecyclerConfiguration, s); err != nil {
-		return err
-	}
-	out.FlexVolumePluginDir = in.FlexVolumePluginDir
-	return nil
-}
-
-// Convert_config_VolumeConfiguration_To_v1alpha1_VolumeConfiguration is an autogenerated conversion function.
-func Convert_config_VolumeConfiguration_To_v1alpha1_VolumeConfiguration(in *config.VolumeConfiguration, out *v1alpha1.VolumeConfiguration, s conversion.Scope) error {
-	return autoConvert_config_VolumeConfiguration_To_v1alpha1_VolumeConfiguration(in, out, s)
 }

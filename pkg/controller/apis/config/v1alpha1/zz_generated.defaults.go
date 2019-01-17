@@ -38,6 +38,4 @@ func RegisterDefaults(scheme *runtime.Scheme) error {
 func SetObjectDefaults_KubeControllerManagerConfiguration(in *v1alpha1.KubeControllerManagerConfiguration) {
 	SetDefaults_KubeControllerManagerConfiguration(in)
 	SetDefaults_KubeCloudSharedConfiguration(&in.KubeCloudShared)
-	SetDefaults_VolumeConfiguration(&in.PersistentVolumeBinderController.VolumeConfiguration)
-	SetDefaults_PersistentVolumeRecyclerConfiguration(&in.PersistentVolumeBinderController.VolumeConfiguration.PersistentVolumeRecyclerConfiguration)
 }

@@ -32,6 +32,8 @@ go_library(
         "//pkg/controller/service/config/v1alpha1:go_default_library",
         "//pkg/controller/serviceaccount/config/v1alpha1:go_default_library",
         "//pkg/controller/ttlafterfinished/config/v1alpha1:go_default_library",
+        "//pkg/controller/volume/attachdetach/config/v1alpha1:go_default_library",
+        "//pkg/controller/volume/persistentvolume/config/v1alpha1:go_default_library",
         "//staging/src/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
         "//staging/src/k8s.io/apimachinery/pkg/conversion:go_default_library",
         "//staging/src/k8s.io/apimachinery/pkg/runtime:go_default_library",
