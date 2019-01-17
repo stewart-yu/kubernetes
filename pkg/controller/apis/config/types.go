@@ -36,6 +36,8 @@ import (
 	serviceconfig "k8s.io/kubernetes/pkg/controller/service/config"
 	serviceaccountconfig "k8s.io/kubernetes/pkg/controller/serviceaccount/config"
 	ttlafterfinishedconfig "k8s.io/kubernetes/pkg/controller/ttlafterfinished/config"
+	attachdetachconfig "k8s.io/kubernetes/pkg/controller/volume/attachdetach/config"
+	persistentvolumeconfig "k8s.io/kubernetes/pkg/controller/volume/persistentvolume/config"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -52,7 +54,7 @@ type KubeControllerManagerConfiguration struct {
 
 	// AttachDetachControllerConfiguration holds configuration for
 	// AttachDetachController related features.
-	AttachDetachController AttachDetachControllerConfiguration
+	AttachDetachController attachdetachconfig.AttachDetachControllerConfiguration
 	// CSRSigningControllerConfiguration holds configuration for
 	// CSRSigningController related features.
 	CSRSigningController csrsigningconfig.CSRSigningControllerConfiguration
@@ -86,7 +88,7 @@ type KubeControllerManagerConfiguration struct {
 	NodeLifecycleController nodelifecycleconfig.NodeLifecycleControllerConfiguration
 	// PersistentVolumeBinderControllerConfiguration holds configuration for
 	// PersistentVolumeBinderController related features.
-	PersistentVolumeBinderController PersistentVolumeBinderControllerConfiguration
+	PersistentVolumeBinderController persistentvolumeconfig.PersistentVolumeBinderControllerConfiguration
 	// PodGCControllerConfiguration holds configuration for PodGCController
 	// related features.
 	PodGCController podgcconfig.PodGCControllerConfiguration
@@ -170,17 +172,6 @@ type KubeCloudSharedConfiguration struct {
 	NodeSyncPeriod metav1.Duration
 }
 
-// AttachDetachControllerConfiguration contains elements describing AttachDetachController.
-type AttachDetachControllerConfiguration struct {
-	// Reconciler runs a periodic loop to reconcile the desired state of the with
-	// the actual state of the world by triggering attach detach operations.
-	// This flag enables or disables reconcile.  Is false by default, and thus enabled.
-	DisableAttachDetachReconcilerSync bool
-	// ReconcilerSyncLoopPeriod is the amount of time the reconciler sync states loop
-	// wait between successive executions. Is set to 5 sec by default.
-	ReconcilerSyncLoopPeriod metav1.Duration
-}
-
 // CloudProviderConfiguration contains basically elements about cloud provider.
 type CloudProviderConfiguration struct {
 	// Name is the provider for cloud services.
@@ -200,63 +191,4 @@ type DeprecatedControllerConfiguration struct {
 	// registerRetryCount is the number of retries for initial node registration.
 	// Retry interval equals node-sync-period.
 	RegisterRetryCount int32
-}
-
-// PersistentVolumeBinderControllerConfiguration contains elements describing
-// PersistentVolumeBinderController.
-type PersistentVolumeBinderControllerConfiguration struct {
-	// pvClaimBinderSyncPeriod is the period for syncing persistent volumes
-	// and persistent volume claims.
-	PVClaimBinderSyncPeriod metav1.Duration
-	// volumeConfiguration holds configuration for volume related features.
-	VolumeConfiguration VolumeConfiguration
-}
-
-// VolumeConfiguration contains *all* enumerated flags meant to configure all volume
-// plugins. From this config, the controller-manager binary will create many instances of
-// volume.VolumeConfig, each containing only the configuration needed for that plugin which
-// are then passed to the appropriate plugin. The ControllerManager binary is the only part
-// of the code which knows what plugins are supported and which flags correspond to each plugin.
-type VolumeConfiguration struct {
-	// enableHostPathProvisioning enables HostPath PV provisioning when running without a
-	// cloud provider. This allows testing and development of provisioning features. HostPath
-	// provisioning is not supported in any way, won't work in a multi-node cluster, and
-	// should not be used for anything other than testing or development.
-	EnableHostPathProvisioning bool
-	// enableDynamicProvisioning enables the provisioning of volumes when running within an environment
-	// that supports dynamic provisioning. Defaults to true.
-	EnableDynamicProvisioning bool
-	// persistentVolumeRecyclerConfiguration holds configuration for persistent volume plugins.
-	PersistentVolumeRecyclerConfiguration PersistentVolumeRecyclerConfiguration
-	// volumePluginDir is the full path of the directory in which the flex
-	// volume plugin should search for additional third party volume plugins
-	FlexVolumePluginDir string
-}
-
-// PersistentVolumeRecyclerConfiguration contains elements describing persistent volume plugins.
-type PersistentVolumeRecyclerConfiguration struct {
-	// maximumRetry is number of retries the PV recycler will execute on failure to recycle
-	// PV.
-	MaximumRetry int32
-	// minimumTimeoutNFS is the minimum ActiveDeadlineSeconds to use for an NFS Recycler
-	// pod.
-	MinimumTimeoutNFS int32
-	// podTemplateFilePathNFS is the file path to a pod definition used as a template for
-	// NFS persistent volume recycling
-	PodTemplateFilePathNFS string
-	// incrementTimeoutNFS is the increment of time added per Gi to ActiveDeadlineSeconds
-	// for an NFS scrubber pod.
-	IncrementTimeoutNFS int32
-	// podTemplateFilePathHostPath is the file path to a pod definition used as a template for
-	// HostPath persistent volume recycling. This is for development and testing only and
-	// will not work in a multi-node cluster.
-	PodTemplateFilePathHostPath string
-	// minimumTimeoutHostPath is the minimum ActiveDeadlineSeconds to use for a HostPath
-	// Recycler pod.  This is for development and testing only and will not work in a multi-node
-	// cluster.
-	MinimumTimeoutHostPath int32
-	// incrementTimeoutHostPath is the increment of time added per Gi to ActiveDeadlineSeconds
-	// for a HostPath scrubber pod.  This is for development and testing only and will not work
-	// in a multi-node cluster.
-	IncrementTimeoutHostPath int32
 }
