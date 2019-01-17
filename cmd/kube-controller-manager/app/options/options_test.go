@@ -48,6 +48,8 @@ import (
 	serviceconfig "k8s.io/kubernetes/pkg/controller/service/config"
 	serviceaccountconfig "k8s.io/kubernetes/pkg/controller/serviceaccount/config"
 	ttlafterfinishedconfig "k8s.io/kubernetes/pkg/controller/ttlafterfinished/config"
+	attachdetachconfig "k8s.io/kubernetes/pkg/controller/volume/attachdetach/config"
+	persistentvolumeconfig "k8s.io/kubernetes/pkg/controller/volume/persistentvolume/config"
 )
 
 func TestAddFlags(t *testing.T) {
@@ -191,7 +193,7 @@ func TestAddFlags(t *testing.T) {
 			},
 		},
 		AttachDetachController: &AttachDetachControllerOptions{
-			&kubectrlmgrconfig.AttachDetachControllerConfiguration{
+			&attachdetachconfig.AttachDetachControllerConfiguration{
 				ReconcilerSyncLoopPeriod:          metav1.Duration{Duration: 30 * time.Second},
 				DisableAttachDetachReconcilerSync: true,
 			},
@@ -275,13 +277,13 @@ func TestAddFlags(t *testing.T) {
 			},
 		},
 		PersistentVolumeBinderController: &PersistentVolumeBinderControllerOptions{
-			&kubectrlmgrconfig.PersistentVolumeBinderControllerConfiguration{
+			&persistentvolumeconfig.PersistentVolumeBinderControllerConfiguration{
 				PVClaimBinderSyncPeriod: metav1.Duration{Duration: 30 * time.Second},
-				VolumeConfiguration: kubectrlmgrconfig.VolumeConfiguration{
+				VolumeConfiguration: persistentvolumeconfig.VolumeConfiguration{
 					EnableDynamicProvisioning:  false,
 					EnableHostPathProvisioning: true,
 					FlexVolumePluginDir:        "/flex-volume-plugin",
-					PersistentVolumeRecyclerConfiguration: kubectrlmgrconfig.PersistentVolumeRecyclerConfiguration{
+					PersistentVolumeRecyclerConfiguration: persistentvolumeconfig.PersistentVolumeRecyclerConfiguration{
 						MaximumRetry:             3,
 						MinimumTimeoutNFS:        200,
 						IncrementTimeoutNFS:      45,
