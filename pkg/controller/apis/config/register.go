@@ -38,6 +38,25 @@ var (
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&KubeControllerManagerConfiguration{},
+		&AttachDetachControllerConfiguration{},
+		&CSRSigningControllerConfiguration{},
+		&DaemonSetControllerConfiguration{},
+		&DeploymentControllerConfiguration{},
+		&EndpointControllerConfiguration{},
+		&GarbageCollectorControllerConfiguration{},
+		&HPAControllerConfiguration{},
+		&JobControllerConfiguration{},
+		&NamespaceControllerConfiguration{},
+		&NodeIPAMControllerConfiguration{},
+		&NodeLifecycleControllerConfiguration{},
+		&PersistentVolumeBinderControllerConfiguration{},
+		&PodGCControllerConfiguration{},
+		&ReplicaSetControllerConfiguration{},
+		&ReplicationControllerConfiguration{},
+		&ResourceQuotaControllerConfiguration{},
+		&SAControllerConfiguration{},
+		&ServiceControllerConfiguration{},
+		&TTLAfterFinishedControllerConfiguration{},
 	)
 	return nil
 }
